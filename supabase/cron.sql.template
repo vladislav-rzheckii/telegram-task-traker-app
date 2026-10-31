@@ -1,0 +1,19 @@
+-- Запуск уведомлений раз в минуту.
+-- 1) Скопируйте этот текст в SQL Editor, 2) замените <PROJECT_REF> и <CRON_SECRET>, 3) нажмите Run.
+-- <PROJECT_REF> — идентификатор проекта (часть адреса https://<PROJECT_REF>.supabase.co).
+-- <CRON_SECRET> — тот же секрет, что вы задали для функции notify.
+-- Файл с подставленным секретом не коммитьте в репозиторий.
+
+select cron.schedule(
+  'nashi-dela-notify',
+  '* * * * *',
+  $$
+  select net.http_post(
+    url := 'https://<PROJECT_REF>.supabase.co/functions/v1/notify',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'x-cron-secret', '<CRON_SECRET>'),
+    body := '{}'::jsonb
+  );
+  $$
+);
+
+select cron.schedule('nashi-dela-cleanup', '0 3 * * *', $$ select public.cleanup_outbox(); $$);

@@ -1,0 +1,11 @@
+project_id = "nashi-dela"
+
+# Функции проверяют доступ сами (подпись Telegram / секретные заголовки), поэтому JWT от Supabase не требуем.
+[functions.tg-auth]
+verify_jwt = false
+
+[functions.bot]
+verify_jwt = false
+
+[functions.notify]
+verify_jwt = false
