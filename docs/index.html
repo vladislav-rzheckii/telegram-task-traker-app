@@ -394,6 +394,57 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .save:disabled { opacity: .45; }
 .subchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .subchip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: 13px; color: var(--fg); }
+/* Форма задачи: параметры в ряду иконок, панель открывается на месте клавиатуры */
+.nf { gap: 10px; }
+.nf-ctx { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.nf-ctx::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
+.nf-tw { position: relative; }
+.sheet textarea.nf-title, .nf-hl { border: 0; padding: 4px 2px; font-size: 18px; font-weight: 600; line-height: 1.35; letter-spacing: normal; font-family: inherit; }
+.sheet textarea.nf-title { position: relative; display: block; width: 100%; resize: none; overflow: hidden; background: transparent; color: transparent; caret-color: var(--fg); white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.sheet textarea.nf-title:focus { outline: none; }
+.sheet textarea.nf-title::placeholder { color: var(--muted); }
+.nf-hl { position: absolute; inset: 0; white-space: pre-wrap; overflow-wrap: anywhere; overflow: hidden; pointer-events: none; color: var(--fg); }
+.nf-hl mark { background: var(--accent-soft); color: var(--accent); border-radius: 5px; box-shadow: 0 0 0 2px var(--accent-soft); }
+.nf-hl .ign { text-decoration: underline dotted var(--muted); text-underline-offset: 4px; }
+.nf-sum { font-size: 13px; color: var(--muted); padding: 0 2px; }
+.nf-subs { display: grid; gap: 6px; }
+.nf-sublist { display: grid; gap: 2px; }
+.nf-sub { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--fg); min-width: 0; }
+.nf-sub span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nf-sub button { border: 0; background: transparent; color: var(--muted); width: 28px; height: 28px; display: grid; place-items: center; padding: 0; }
+.nf-sub button .ic { width: 13px; height: 13px; }
+.nf-bar { display: flex; align-items: center; gap: 2px; border-top: 1px solid var(--line); padding-top: 8px; }
+.nf-ib { position: relative; border: 0; background: transparent; color: var(--muted); width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; padding: 0; }
+.nf-ib .ic { width: 22px; height: 22px; }
+.nf-ib.set { color: var(--accent); }
+.nf-ib.open { background: var(--accent-soft); color: var(--accent); }
+.nf-ib.set::after { content: ""; position: absolute; top: 6px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+.nf-send { margin-left: auto; border: 0; width: 46px; height: 46px; border-radius: 14px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; padding: 0; }
+.nf-send .ic { width: 22px; height: 22px; }
+.nf-send:disabled { opacity: .45; }
+.nf-panel { display: grid; gap: 10px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 4px 16px 0; border-top: 1px solid var(--line); touch-action: pan-x; }
+.nf-panel[hidden] { display: none; }
+.nf-grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 0; }
+.nf-phead { display: flex; justify-content: space-between; align-items: center; }
+.nf-phead b { font-size: 14px; color: var(--fg); }
+.nf-done { border: 0; background: transparent; color: var(--accent); font-weight: 700; font-size: 15px; padding: 6px 2px; }
+.nf-tabs { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg); border-radius: 12px; padding: 3px; gap: 3px; }
+.nf-tabs button { border: 0; background: transparent; border-radius: 9px; padding: 7px; font-size: 13px; color: var(--fg); }
+.nf-tabs button.on { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.nf-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; color: var(--fg); }
+.nf-row .pill.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.sheet .nf-row input[type="time"], .sheet .nf-row input[type="number"] { width: auto; min-height: 0; padding: 6px 12px; font-size: 14px; border-radius: 999px; }
+.sheet .nf-row input[type="number"] { width: 70px; }
+.nf-calh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; color: var(--fg); }
+.nf-calh button { border: 0; background: transparent; color: var(--accent); width: 36px; height: 30px; display: grid; place-items: center; padding: 0; }
+.nf-calh button:disabled { color: var(--muted); opacity: .4; }
+.nf-calh .ic { width: 18px; height: 18px; }
+.nf-cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; text-align: center; }
+.nf-cal .wd { font-size: 11px; color: var(--muted); padding: 2px 0; }
+.nf-cal button { border: 0; background: transparent; color: var(--fg); height: 34px; border-radius: 10px; font-size: 14px; padding: 0; }
+.nf-cal button:disabled { opacity: .3; }
+.nf-cal button.td { box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); font-weight: 700; }
+.nf-cal button.sel { background: var(--accent); color: var(--accent-fg); font-weight: 700; }
 .note { margin: 22px 0 8px; font-size: 12px; color: var(--muted); text-align: center; }
 
 .toast {
@@ -469,53 +520,28 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 <div class="gate" id="gate"></div>
 
 <div class="scrim" id="scrim" hidden>
-  <form class="sheet" id="form" aria-label="Задача" novalidate>
+  <form class="sheet nf" id="form" aria-label="Задача" novalidate>
     <div class="sheet-head">
       <h3 id="f-head">Новая задача</h3>
       <button class="close" id="close" type="button" aria-label="Закрыть">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
-    <div class="f">
-      <label for="f-title">Что нужно сделать</label>
-      <input type="text" id="f-title" maxlength="140" placeholder="Купить цветы завтра в 18:00 @она #дом !2" autocomplete="off">
-      <div class="hints" id="f-hints"></div>
-      <div class="parsed" id="f-parsed" aria-live="polite"></div>
+    <div class="nf-ctx" id="f-ctx" hidden></div>
+    <div class="nf-tw">
+      <div class="nf-hl" id="f-hl" aria-hidden="true"></div>
+      <textarea id="f-title" class="nf-title" rows="1" maxlength="140" placeholder="Название задачи" autocomplete="off" enterkeyhint="done" aria-label="Название задачи"></textarea>
     </div>
-    <div class="f">Для кого
-      <div class="seg" id="f-who"></div>
-    </div>
-    <div class="row2">
-      <div class="f"><label for="f-date">Срок</label>
-        <input type="date" id="f-date">
-      </div>
-      <div class="f"><label for="f-time">Время</label>
-        <input type="time" id="f-time">
-      </div>
-    </div>
-    <button class="pick" id="f-nodate" type="button" aria-pressed="false">Без даты, в Backlog</button>
-    <div class="f">Важность
-      <div class="seg" id="f-prio"></div>
-    </div>
-    <div class="f">Список
-      <div class="picks" id="f-list"></div>
-    </div>
-    <div class="f">Повтор
-      <div class="seg" id="f-rep"></div>
-      <div class="every" id="f-every" hidden>
-        <span>Каждые</span>
-        <input type="number" id="f-every-n" min="1" max="99" value="1" inputmode="numeric">
-        <span id="f-every-u"></span>
-      </div>
-    </div>
-    <div class="f"><label for="f-subinput">Подзадачи</label>
-      <div class="subchips" id="f-subs"></div>
+    <div class="nf-sum" id="f-sum"></div>
+    <div class="nf-subs" id="f-subwrap" hidden>
+      <div class="nf-sublist" id="f-subs"></div>
       <div class="addrow">
-        <input type="text" class="mini" id="f-subinput" maxlength="80" placeholder="Например, купить молоко" autocomplete="off">
-        <button class="go" id="f-subadd" type="button">Добавить</button>
+        <input type="text" class="mini" id="f-subinput" maxlength="80" placeholder="Добавить подзадачу" autocomplete="off" aria-label="Новая подзадача">
+        <button class="go" id="f-subadd" type="button" aria-label="Добавить подзадачу">+</button>
       </div>
     </div>
-    <button class="save" id="save" type="submit" disabled>Добавить задачу</button>
+    <div class="nf-bar" id="f-bar"></div>
+    <div class="nf-panel" id="f-panel" hidden></div>
   </form>
 </div>
 
@@ -625,13 +651,21 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 
   function nm(n) { return String(n || '').toLowerCase().replace(/[^a-zа-яё0-9_-]/gi, ''); }
   function nameAlt() { return [nm(NAMES.him), nm(NAMES.her)].filter(Boolean).join('|') || 'xx'; }
-  function parseSmart(text) {
-    var s = text, rec = {}, tags = [], m, h, sf;
+  function escRe(x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  /* ignore — слова, которые пользователь «выключил» нажатием: они остаются обычным текстом. spans — позиции распознанных слов. */
+  function parseSmart(text, ignore) {
+    var s = text, rec = {}, tags = [], spans = [], m, h, sf;
+    (ignore || []).forEach(function (w) {
+      s = s.replace(new RegExp('(^|\\s)(' + escRe(w) + ')(?=\\s|$|[,;])', 'giu'), function (all, a, b) { return a + new Array(b.length + 1).join('\u0001'); });
+    });
     function take(re, ok) {
       var r = re.exec(s);
       if (!r) return null;
       if (ok && !ok(r)) return null;
-      s = s.slice(0, r.index) + ' ' + s.slice(r.index + r[0].length);
+      var st = r.index, en = r.index + r[0].length;
+      while (st < en && /\s/.test(s.charAt(st))) st++;
+      spans.push([st, en]);
+      s = s.slice(0, r.index) + new Array(r[0].length + 1).join(' ') + s.slice(en);
       return r;
     }
     if ((m = take(mk('кажд\\S*\\s+(?:(\\d+)\\s+)?(дн\\S*|день|недел\\S*|месяц\\S*)')))) {
@@ -693,7 +727,9 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (rec.prio !== undefined) tags.push('важность: ' + PRIO_NAMES[rec.prio].toLowerCase());
     if (rec.list) tags.push('#' + lists.filter(function (l) { return l.id === rec.list; })[0].name);
     if (rec.rep) tags.push(repLabel(rec.rep));
-    return { title: s.replace(/\s+/g, ' ').trim(), rec: rec, tags: tags };
+    var out = '';
+    for (var ci = 0; ci < s.length; ci++) out += s.charAt(ci) === '\u0001' ? text.charAt(ci) : s.charAt(ci);
+    return { title: out.replace(/\s+/g, ' ').trim(), rec: rec, tags: tags, spans: spans };
   }
   //pure>
 
@@ -1705,14 +1741,16 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     renderTheme();
   });
 
-  /* Форма задачи */
+  /* Форма задачи. Параметры спрятаны в ряд иконок, панель открывается на месте клавиатуры. */
   var scrim = document.getElementById('scrim');
   var fTitle = document.getElementById('f-title');
-  var fDate = document.getElementById('f-date');
-  var fTime = document.getElementById('f-time');
-  var save = document.getElementById('save');
-  var form = null;
-
+  var subInput = document.getElementById('f-subinput');
+  var form = null, base = null, fOpen = null, fTab = 'date', fCal = [0, 0], fIgnore = [], fSpans = [], fIgnSpans = [];
+  var fHl = document.getElementById('f-hl');
+  var IC_USER = svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.8c2 .7 3.2 2.5 3.6 5.2"/>');
+  var IC_LIST = svg('<path d="M3 6a2 2 0 012-2h4l2 3h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>');
+  var IC_UP = svg('<path d="M12 19V5M6 11l6-6 6 6"/>', 2.4);
+  var FKEYS = ['date', 'time', 'who', 'prio', 'list', 'rep'];
   function seg(box, opts, val, pick) {
     box.textContent = '';
     box.style.setProperty('--n', opts.length);
@@ -1726,75 +1764,225 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       box.appendChild(b);
     });
   }
+
+  /* По умолчанию задача на того, кто её добавляет. Фильтры «Партнёр» и «Общие» подставляют своё. */
   function blankForm() {
-    return { id: null, who: filter === 'mine' ? viewer : filter === 'theirs' ? other() : 'both', date: tab === 'cal' ? selected : tab === 'inbox' ? '' : todayIso, time: '', prio: 0, list: listFilter, rep: null, subs: [] };
+    var who = filter === 'theirs' ? other() : filter === 'both' ? 'both' : viewer;
+    return { id: null, who: who, date: tab === 'cal' ? selected : tab === 'inbox' ? '' : todayIso, time: '', prio: 0, list: listFilter, rep: null, subs: [] };
+  }
+  function formCtx() {
+    if (form.id) return '';
+    var a = [];
+    if (tab === 'cal') a.push('Из календаря: ' + relLabel(selected));
+    if (tab === 'inbox') a.push('Из Backlog: без даты');
+    if (listFilter && listById(listFilter)) a.push('Список «' + listById(listFilter).name + '»');
+    return a.join(' · ');
+  }
+  function setF(k, v) { form[k] = v; base[k] = v; }
+  function whenText() {
+    var s = form.date ? relLabel(form.date) : (form.rep ? 'с сегодня' : 'Backlog');
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    if (form.time) s += ', ' + form.time;
+    if (form.rep) s += ' · ' + repLabel(form.rep);
+    return s;
+  }
+  function pill(label, on, fn) {
+    var b = el('button', 'pill' + (on ? ' on' : ''), label); b.type = 'button';
+    b.addEventListener('click', fn);
+    return b;
+  }
+  function syncCal() { var d = form.date ? parseIso(form.date) : today; fCal = [d.getFullYear(), d.getMonth()]; }
+  function openPanel(k) {
+    fOpen = fOpen === k ? null : k;
+    if (fOpen === 'when') { syncCal(); fTab = 'date'; }
+    renderForm();
+    if (fOpen === 'subs') subInput.focus();
+    else if (fOpen) { fTitle.blur(); subInput.blur(); }
+    else fTitle.focus();
+  }
+  function closePanel() { fOpen = null; renderForm(); fTitle.focus(); }
+  function pick(k, v, autoClose) { setF(k, v); if (autoClose) fOpen = null; renderForm(); }
+
+  function calBox() {
+    var y = fCal[0], m = fCal[1], box = el('div');
+    var h = el('div', 'nf-calh');
+    var pv = el('button'); pv.type = 'button'; pv.innerHTML = IC.left; pv.setAttribute('aria-label', 'Предыдущий месяц');
+    pv.disabled = y === today.getFullYear() && m === today.getMonth();
+    pv.addEventListener('click', function () { var d = new Date(y, m - 1, 1); fCal = [d.getFullYear(), d.getMonth()]; renderForm(); });
+    var nx = el('button'); nx.type = 'button'; nx.innerHTML = IC.right; nx.setAttribute('aria-label', 'Следующий месяц');
+    nx.addEventListener('click', function () { var d = new Date(y, m + 1, 1); fCal = [d.getFullYear(), d.getMonth()]; renderForm(); });
+    var t = new Date(y, m, 1).toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' }).replace(' г.', '');
+    h.appendChild(pv); h.appendChild(el('span', null, t.charAt(0).toUpperCase() + t.slice(1))); h.appendChild(nx);
+    box.appendChild(h);
+    var g = el('div', 'nf-cal');
+    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(function (w) { g.appendChild(el('span', 'wd', w)); });
+    var lead = (new Date(y, m, 1).getDay() + 6) % 7, n = new Date(y, m + 1, 0).getDate();
+    for (var i = 0; i < lead; i++) g.appendChild(el('span'));
+    for (var d = 1; d <= n; d++) (function (d) {
+      var ds = iso(new Date(y, m, d));
+      var b = el('button', (ds === todayIso ? 'td ' : '') + (ds === form.date ? 'sel' : ''), String(d)); b.type = 'button';
+      if (ds < todayIso) b.disabled = true;
+      b.addEventListener('click', function () { pick('date', ds); });
+      g.appendChild(b);
+    })(d);
+    box.appendChild(g);
+    return box;
+  }
+  function panelBody(p) {
+    if (fOpen === 'when') {
+      var tt = el('div', 'nf-tabs');
+      [['date', 'Дата'], ['time', 'Время'], ['rep', 'Повтор']].forEach(function (x) {
+        var b = el('button', fTab === x[0] ? 'on' : '', x[1]); b.type = 'button';
+        b.addEventListener('click', function () { fTab = x[0]; renderForm(); });
+        tt.appendChild(b);
+      });
+      p.appendChild(tt);
+      var r = el('div', 'nf-row');
+      if (fTab === 'date') {
+        [['Сегодня', todayIso], ['Завтра', addIsoDays(todayIso, 1)], ['Выходные', nextWd(6, false)]].forEach(function (q) {
+          r.appendChild(pill(q[0], form.date === q[1], function () { setF('date', q[1]); syncCal(); renderForm(); }));
+        });
+        r.appendChild(pill('Backlog', !form.date && !form.rep, function () { setF('time', ''); setF('rep', null); pick('date', ''); }));
+        p.appendChild(r); p.appendChild(calBox());
+      } else if (fTab === 'time') {
+        [['Без времени', ''], ['09:00', '09:00'], ['13:00', '13:00'], ['18:00', '18:00'], ['21:00', '21:00']].forEach(function (q) {
+          r.appendChild(pill(q[0], form.time === q[1], function () { if (q[1] && !form.date) setF('date', todayIso); pick('time', q[1]); }));
+        });
+        var ti = el('input'); ti.type = 'time'; ti.value = form.time || ''; ti.setAttribute('aria-label', 'Другое время');
+        ti.addEventListener('change', function () { if (ti.value && !form.date) setF('date', todayIso); pick('time', ti.value); });
+        r.appendChild(ti); p.appendChild(r);
+      } else {
+        [['Нет', ''], ['День', 'day'], ['Неделя', 'week'], ['Месяц', 'month']].forEach(function (q) {
+          r.appendChild(pill(q[0], (form.rep ? form.rep.unit : '') === q[1], function () {
+            if (q[1] && !form.date) setF('date', todayIso);
+            pick('rep', q[1] ? { unit: q[1], every: form.rep ? form.rep.every : 1 } : null);
+          }));
+        });
+        p.appendChild(r);
+        if (form.rep) {
+          var ev = el('div', 'nf-row');
+          ev.appendChild(el('span', null, 'Каждые'));
+          var n = el('input'); n.type = 'number'; n.min = 1; n.max = 99; n.value = form.rep.every; n.inputMode = 'numeric';
+          n.addEventListener('change', function () { setF('rep', { unit: form.rep.unit, every: Math.max(1, Math.min(99, parseInt(n.value, 10) || 1)) }); renderForm(); });
+          ev.appendChild(n);
+          ev.appendChild(el('span', null, form.rep.unit === 'day' ? 'дн.' : form.rep.unit === 'week' ? 'нед.' : 'мес.'));
+          p.appendChild(ev);
+        }
+      }
+    } else if (fOpen === 'who') {
+      var g = el('div', 'seg');
+      seg(g, [{ k: 'him', t: NAMES.him, c: 'var(--him)', dot: 'him' }, { k: 'her', t: NAMES.her, c: 'var(--her)', dot: 'her' }, { k: 'both', t: NAMES.both, c: 'var(--both)', dot: 'both' }], form.who, function (k) { pick('who', k, true); });
+      p.appendChild(g);
+    } else if (fOpen === 'prio') {
+      var g2 = el('div', 'seg');
+      seg(g2, PRIO_NAMES.map(function (n, i) { return { k: i, t: n, c: ['var(--muted)', 'var(--p1)', 'var(--p2)', 'var(--p3)'][i] }; }), form.prio, function (k) { pick('prio', k, true); });
+      p.appendChild(g2);
+    } else if (fOpen === 'list') {
+      var pl = el('div', 'picks');
+      [{ id: '', name: 'Без списка', color: 'var(--muted)' }].concat(lists).forEach(function (L) {
+        var b = el('button', 'pick'); b.type = 'button';
+        b.style.setProperty('--c', L.color);
+        b.setAttribute('aria-pressed', String(form.list === L.id));
+        if (L.id) { var sw = el('span', 'sw'); sw.style.background = L.color; b.appendChild(sw); }
+        b.appendChild(document.createTextNode(L.name));
+        b.addEventListener('click', function () { pick('list', L.id, true); });
+        pl.appendChild(b);
+      });
+      p.appendChild(pl);
+    }
   }
   function renderForm() {
-    seg(document.getElementById('f-who'), [{ k: 'him', t: NAMES.him, c: 'var(--him)', dot: 'him' }, { k: 'her', t: NAMES.her, c: 'var(--her)', dot: 'her' }, { k: 'both', t: NAMES.both, c: 'var(--both)', dot: 'both' }], form.who, function (k) { form.who = k; renderForm(); });
-    fDate.value = form.date || '';
-    document.getElementById('f-nodate').setAttribute('aria-pressed', String(!form.date));
-    fTime.value = form.time || '';
-    seg(document.getElementById('f-prio'), PRIO_NAMES.map(function (n, i) { return { k: i, t: n, c: ['var(--muted)', 'var(--p1)', 'var(--p2)', 'var(--p3)'][i] }; }), form.prio, function (k) { form.prio = k; renderForm(); });
+    var ctx = document.getElementById('f-ctx'), ct = formCtx();
+    ctx.hidden = !ct; ctx.textContent = ct;
+    var sum = [NAMES[form.who], whenText()];
+    if (form.prio) sum.push(PRIO_NAMES[form.prio]);
+    var L = form.list ? listById(form.list) : null;
+    if (L) sum.push(L.name);
+    document.getElementById('f-sum').textContent = sum.join(' · ');
 
-    var pl = document.getElementById('f-list'); pl.textContent = '';
-    [{ id: '', name: 'Без списка', color: 'var(--muted)' }].concat(lists).forEach(function (L) {
-      var b = el('button', 'pick'); b.type = 'button';
-      b.style.setProperty('--c', L.color);
-      b.setAttribute('aria-pressed', String(form.list === L.id));
-      if (L.id) { var sw = el('span', 'sw'); sw.style.background = L.color; b.appendChild(sw); }
-      b.appendChild(document.createTextNode(L.name));
-      b.addEventListener('click', function () { form.list = L.id; renderForm(); });
-      pl.appendChild(b);
-    });
-
-    seg(document.getElementById('f-rep'), [{ k: '', t: 'Нет' }, { k: 'day', t: 'День' }, { k: 'week', t: 'Неделя' }, { k: 'month', t: 'Месяц' }], form.rep ? form.rep.unit : '', function (k) {
-      form.rep = k ? { unit: k, every: form.rep ? form.rep.every : 1 } : null;
-      renderForm();
-    });
-    var ev = document.getElementById('f-every');
-    ev.hidden = !form.rep;
-    if (form.rep) {
-      document.getElementById('f-every-n').value = form.rep.every;
-      document.getElementById('f-every-u').textContent = form.rep.unit === 'day' ? 'дн.' : form.rep.unit === 'week' ? 'нед.' : 'мес.';
-    }
-
-    var sc = document.getElementById('f-subs'); sc.textContent = '';
+    var sw = document.getElementById('f-subwrap');
+    sw.hidden = !(form.subs.length || fOpen === 'subs');
+    var sl = document.getElementById('f-subs'); sl.textContent = '';
     form.subs.forEach(function (s, i) {
-      var c = el('span', 'subchip'); c.appendChild(document.createTextNode(s.t));
-      var x = el('button', 'x'); x.type = 'button'; x.innerHTML = IC.x; x.setAttribute('aria-label', 'Убрать подзадачу');
+      var r = el('div', 'nf-sub'); r.appendChild(el('span', null, '— ' + s.t));
+      var x = el('button'); x.type = 'button'; x.innerHTML = IC.x; x.setAttribute('aria-label', 'Убрать подзадачу');
       x.addEventListener('click', function () { form.subs.splice(i, 1); renderForm(); });
-      c.appendChild(x); sc.appendChild(c);
+      r.appendChild(x); sl.appendChild(r);
     });
+
+    var bar = document.getElementById('f-bar'); bar.textContent = '';
+    [['when', IC.cal0, !!(form.date || form.time || form.rep), 'Дата и время'],
+     ['who', IC_USER, form.who !== viewer, 'Для кого'],
+     ['prio', IC.flag, !!form.prio, 'Важность'],
+     ['list', IC_LIST, !!form.list, 'Список'],
+     ['subs', IC.sub, !!form.subs.length, 'Подзадачи']].forEach(function (x) {
+      var b = el('button', 'nf-ib' + (x[2] ? ' set' : '') + (fOpen === x[0] ? ' open' : '')); b.type = 'button';
+      b.innerHTML = x[1]; b.setAttribute('aria-label', x[3]); b.setAttribute('aria-expanded', String(fOpen === x[0]));
+      b.addEventListener('click', function () { openPanel(x[0]); });
+      bar.appendChild(b);
+    });
+    var sv = el('button', 'nf-send'); sv.type = 'button'; sv.id = 'save';
+    sv.addEventListener('click', saveForm);
+    sv.innerHTML = form.id ? IC.check : IC_UP;
+    sv.setAttribute('aria-label', form.id ? 'Сохранить' : 'Добавить задачу');
+    sv.disabled = !fTitle.value.trim();
+    bar.appendChild(sv);
+
+    var p = document.getElementById('f-panel'); p.textContent = '';
+    var hasPanel = !!fOpen && fOpen !== 'subs';
+    p.hidden = !hasPanel;
+    if (hasPanel) {
+      p.appendChild(el('div', 'nf-grab'));
+      var hd = el('div', 'nf-phead');
+      hd.appendChild(el('b', null, { when: 'Когда', who: 'Для кого', prio: 'Важность', list: 'Список' }[fOpen]));
+      var dn = el('button', 'nf-done', 'Готово'); dn.type = 'button'; dn.addEventListener('click', closePanel);
+      hd.appendChild(dn); p.appendChild(hd);
+      panelBody(p);
+    }
   }
-  function applyParsed(p) {
-    var r = p.rec;
-    if (r.date !== undefined) form.date = r.date;
-    if (r.time !== undefined) form.time = r.time;
-    if (r.who !== undefined) form.who = r.who;
-    if (r.prio !== undefined) form.prio = r.prio;
-    if (r.list !== undefined) form.list = r.list;
-    if (r.rep !== undefined) form.rep = r.rep;
+  /* Подсветка распознанных слов: под прозрачным полем лежит копия текста с выделением */
+  function renderHl() {
+    var v = fTitle.value, marks = [];
+    fSpans.forEach(function (sp) { marks.push([sp[0], sp[1], 'mark']); });
+    fIgnSpans.forEach(function (sp) { marks.push([sp[0], sp[1], 'ign']); });
+    marks.sort(function (a, b) { return a[0] - b[0]; });
+    fHl.textContent = '';
+    var pos = 0;
+    marks.forEach(function (mk2) {
+      if (mk2[0] < pos) return;
+      if (mk2[0] > pos) fHl.appendChild(document.createTextNode(v.slice(pos, mk2[0])));
+      var e2 = mk2[2] === 'mark' ? el('mark', null, v.slice(mk2[0], mk2[1])) : el('span', 'ign', v.slice(mk2[0], mk2[1]));
+      fHl.appendChild(e2); pos = mk2[1];
+    });
+    fHl.appendChild(document.createTextNode(v.slice(pos) + ' '));
+    fTitle.style.height = 'auto'; fTitle.style.height = fTitle.scrollHeight + 'px';
+  }
+  function ignoredSpans(v) {
+    var out = [];
+    fIgnore.forEach(function (w) {
+      var re = new RegExp('(^|\\s)(' + escRe(w) + ')(?=\\s|$|[,;])', 'giu'), r;
+      while ((r = re.exec(v))) { var st = r.index + r[1].length; out.push([st, st + r[2].length]); if (re.lastIndex === r.index) re.lastIndex++; }
+    });
+    return out;
   }
   function onTitleInput() {
-    var p = parseSmart(fTitle.value);
-    applyParsed(p);
-    var box = document.getElementById('f-parsed'); box.textContent = '';
-    p.tags.forEach(function (t) { box.appendChild(el('span', 'tag', t)); });
+    var v = fTitle.value;
+    fIgnore = fIgnore.filter(function (w) { return new RegExp('(^|\\s)(' + escRe(w) + ')(?=\\s|$|[,;])', 'iu').test(v); });
+    var pr = parseSmart(v, fIgnore);
+    fSpans = pr.spans; fIgnSpans = ignoredSpans(v);
+    FKEYS.forEach(function (k) { form[k] = (k in pr.rec) ? pr.rec[k] : base[k]; });
+    renderHl();
     renderForm();
-    save.disabled = !fTitle.value.trim();
   }
-  function renderHints() {
-    var box = document.getElementById('f-hints'); box.textContent = '';
-    ['завтра', 'в 18:30', '@' + (nm(NAMES[other()]) || 'оба'), '#дом', '!3', 'каждую неделю'].forEach(function (h) {
-      var b = el('button', 'hint', h); b.type = 'button';
-      b.addEventListener('click', function () {
-        var v = fTitle.value;
-        fTitle.value = v + (v && !/\s$/.test(v) ? ' ' : '') + h + ' ';
-        fTitle.focus();
-        onTitleInput();
-      });
-      box.appendChild(b);
-    });
+  /* Нажатие на выделенное слово выключает его, повторное — включает обратно */
+  function onTitleTap() {
+    var pos = fTitle.selectionStart;
+    if (pos == null || fTitle.selectionEnd !== pos) return;
+    var v = fTitle.value;
+    var hit = fSpans.filter(function (sp) { return pos > sp[0] && pos < sp[1]; })[0];
+    if (hit) { fIgnore.push(v.slice(hit[0], hit[1]).toLowerCase()); onTitleInput(); return; }
+    var ig = fIgnSpans.filter(function (sp) { return pos > sp[0] && pos < sp[1]; })[0];
+    if (ig) { var w = v.slice(ig[0], ig[1]).toLowerCase(); fIgnore = fIgnore.filter(function (x) { return x !== w; }); onTitleInput(); }
   }
   function openSheet(t) {
     if (t) {
@@ -1804,46 +1992,50 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       form = blankForm();
       fTitle.value = '';
     }
+    base = JSON.parse(JSON.stringify(form));
+    fOpen = null;
     document.getElementById('f-head').textContent = t ? 'Изменить задачу' : 'Новая задача';
-    save.textContent = t ? 'Сохранить' : 'Добавить задачу';
-    document.getElementById('f-parsed').textContent = '';
-    document.getElementById('f-subinput').value = '';
-    renderHints();
+    subInput.value = '';
+    fIgnore = []; fSpans = []; fIgnSpans = [];
+    if (t) renderHl(); else onTitleInput();
     renderForm();
-    save.disabled = !fTitle.value.trim();
     scrim.hidden = false;
+    renderHl();
     setTimeout(function () { fTitle.focus(); }, 30);
   }
-  function closeSheet() { scrim.hidden = true; }
+  function closeSheet() { scrim.hidden = true; fOpen = null; }
 
   document.getElementById('add').addEventListener('click', function () { openSheet(null); });
   document.getElementById('close').addEventListener('click', closeSheet);
   scrim.addEventListener('click', function (e) { if (e.target === scrim) closeSheet(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !scrim.hidden) closeSheet(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !scrim.hidden) { if (fOpen) closePanel(); else closeSheet(); } });
   fTitle.addEventListener('input', onTitleInput);
-  fDate.addEventListener('input', function () { form.date = fDate.value; renderForm(); });
-  document.getElementById('f-nodate').addEventListener('click', function () { form.date = ''; form.time = ''; renderForm(); });
-  fTime.addEventListener('input', function () { form.time = fTime.value; });
-  document.getElementById('f-every-n').addEventListener('input', function (e) {
-    if (form.rep) form.rep.every = Math.max(1, Math.min(99, parseInt(e.target.value, 10) || 1));
-  });
-  var subInput = document.getElementById('f-subinput');
+  fTitle.addEventListener('click', onTitleTap);
+  fTitle.addEventListener('focus', function () { if (fOpen && fOpen !== 'subs') { fOpen = null; renderForm(); } });
+  subInput.addEventListener('focus', function () { if (fOpen !== 'subs') { fOpen = 'subs'; renderForm(); } });
   function addFormSub() {
     var v = subInput.value.trim(); if (!v) return;
     form.subs.push({ t: v, done: false }); subInput.value = ''; renderForm(); subInput.focus();
   }
   document.getElementById('f-subadd').addEventListener('click', addFormSub);
   subInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addFormSub(); } });
+  fTitle.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveForm(); } });
+  (function () {
+    var pnl = document.getElementById('f-panel'), y0 = null;
+    pnl.addEventListener('touchstart', function (e) { y0 = e.touches[0].clientY; }, { passive: true });
+    pnl.addEventListener('touchend', function (e) { if (y0 != null && e.changedTouches[0].clientY - y0 > 60) closePanel(); y0 = null; });
+  })();
 
-  document.getElementById('form').addEventListener('submit', function (e) {
-    e.preventDefault();
+  /* Сохранение не зависит от отправки формы: в некоторых встроенных браузерах она запрещена */
+  document.getElementById('form').addEventListener('submit', function (e) { e.preventDefault(); saveForm(); });
+  function saveForm() {
     var raw = fTitle.value.trim();
     if (!raw) return;
-    var p = parseSmart(raw);
-    applyParsed(p);
-    var title = p.title || raw;
+    var pr = parseSmart(raw, fIgnore);
+    var title = pr.title || raw;
     var date = form.date || (form.rep ? todayIso : '');
-    if (form.id) {
+    var wasEdit = !!form.id;
+    if (wasEdit) {
       var t = findTask(form.id);
       t.title = title; t.who = form.who; t.date = date; t.time = form.time; t.prio = form.prio; t.list = form.list; t.rep = form.rep; t.subs = form.subs;
     } else {
@@ -1852,8 +2044,8 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (date) { selected = date; var dd = parseIso(date); view = new Date(dd.getFullYear(), dd.getMonth(), 1); }
     closeSheet();
     renderAll();
-    toast(form.id ? 'Изменения сохранены' : 'Задача добавлена', null);
-  });
+    toast(wasEdit ? 'Изменения сохранены' : 'Задача добавлена', null);
+  }
 
   boot();
 })();
