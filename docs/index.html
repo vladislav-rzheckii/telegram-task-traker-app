@@ -417,6 +417,8 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .sched { flex: none; align-self: center; border: 0; background: var(--accent-soft); color: var(--accent); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; padding: 0; }
 .sched .ic { width: 18px; height: 18px; }
 .sched[aria-expanded="true"] { background: var(--accent); color: var(--accent-fg); }
+.pill-ok { border-color: var(--accent); background: var(--accent); color: var(--accent-fg); font-weight: 600; }
+.pill-ok[hidden] { display: none; }
 .pill-date { position: relative; overflow: hidden; cursor: pointer; }
 .pill-date input[type="date"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; cursor: pointer; }
 #f-nodate { --c: var(--accent); justify-self: start; padding: 8px 14px; }
@@ -959,12 +961,23 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         b.addEventListener('click', function () { moveOpen = null; moveTask(t, rel(p[1])); });
         mv.appendChild(b);
       });
-      var dp = el('label', 'pill pill-date'); dp.innerHTML = IC.cal; dp.appendChild(document.createTextNode('Выбрать дату'));
-      var di = el('input'); di.type = 'date'; di.min = todayIso; di.value = t.date || '';
+      /* Выбор даты: перенос только по кнопке подтверждения. На iOS change приходит сразу при открытии
+         календаря и при прокрутке колеса, поэтому по нему ничего не переносим и не перерисовываем. */
+      var dp = el('label', 'pill pill-date'); dp.innerHTML = IC.cal;
+      var dl = el('span', null, 'Выбрать дату'); dp.appendChild(dl);
+      var di = el('input'); di.type = 'date'; di.min = todayIso;
       di.setAttribute('aria-label', 'Выбрать дату в календаре');
-      di.addEventListener('click', function () { try { if (di.showPicker) di.showPicker(); } catch (e) {} });
-      di.addEventListener('change', function () { if (di.value) { moveOpen = null; moveTask(t, di.value); } });
-      dp.appendChild(di); mv.appendChild(dp);
+      var ok = el('button', 'pill pill-ok', ''); ok.type = 'button'; ok.hidden = true;
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!isIOS) di.addEventListener('click', function () { try { if (di.showPicker) di.showPicker(); } catch (e) {} });
+      function picked() {
+        if (!di.value || di.value < todayIso) { ok.hidden = true; dl.textContent = 'Выбрать дату'; return; }
+        dl.textContent = shortDate(di.value);
+        ok.textContent = 'Перенести на ' + shortDate(di.value); ok.hidden = false;
+      }
+      di.addEventListener('input', picked); di.addEventListener('change', picked);
+      ok.addEventListener('click', function () { if (di.value && di.value >= todayIso) { moveOpen = null; moveTask(t, di.value); } });
+      dp.appendChild(di); mv.appendChild(dp); mv.appendChild(ok);
       if (t.date && !t.rep) {
         var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
         nb.addEventListener('click', function () {
