@@ -979,9 +979,9 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       }
       di.addEventListener('input', picked); di.addEventListener('change', picked);
       ok.addEventListener('click', function () { if (di.value && di.value >= todayIso) { moveOpen = null; moveTask(t, di.value); } });
-      dp.appendChild(di); mv.appendChild(dp); mv.appendChild(ok);
+      dp.appendChild(di); mv.appendChild(dp);
       if (t.date && !t.rep) {
-        var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
+        var nb = el('button', 'pill', 'Backlog'); nb.type = 'button';
         nb.addEventListener('click', function () {
           var od = t.date, ot = t.time;
           t.date = ''; t.time = ''; expanded = null; moveOpen = null;
@@ -990,6 +990,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         });
         mv.appendChild(nb);
       }
+      mv.appendChild(ok);
       box.appendChild(mv);
     }
 
