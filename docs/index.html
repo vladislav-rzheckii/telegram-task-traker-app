@@ -395,7 +395,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .subchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .subchip { display: inline-flex; align-items: center; gap: 6px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: 13px; color: var(--fg); }
 /* Форма задачи: параметры в ряду иконок, панель открывается на месте клавиатуры */
-.nf { gap: 10px; }
+/* Форма закреплена сверху и занимает весь экран: клавиатура и панель параметров появляются снизу
+   и ничего не сдвигают. Раньше лист был прижат к низу и прыгал вслед за клавиатурой. */
+#scrim { align-items: stretch; }
+.sheet.nf { gap: 10px; height: 100%; max-height: none; border-radius: 0; align-content: start;
+  display: flex; flex-direction: column;
+  padding-top: calc(14px + env(safe-area-inset-top, 0px)); overscroll-behavior: contain; }
 .nf-ctx { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .nf-ctx::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
 .nf-tw { position: relative; }
@@ -422,8 +427,10 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .nf-send { margin-left: auto; border: 0; width: 46px; height: 46px; border-radius: 14px; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; padding: 0; }
 .nf-send .ic { width: 22px; height: 22px; }
 .nf-send:disabled { opacity: .45; }
-.nf-panel { display: grid; gap: 10px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 4px 16px 0; border-top: 1px solid var(--line); touch-action: pan-x; }
+.nf-panel { display: grid; gap: 10px; align-content: start; flex: 1 0 300px; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 4px 16px 0; border-top: 1px solid var(--line); touch-action: pan-x; }
 .nf-panel[hidden] { display: none; }
+.sheet.nf > * { flex: none; }
+.sheet.nf > .nf-panel { flex: 1 0 300px; }
 .nf-grab { width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: 4px auto 0; }
 .nf-phead { display: flex; justify-content: space-between; align-items: center; }
 .nf-phead b { font-size: 14px; color: var(--fg); }
@@ -535,6 +542,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       <textarea id="f-title" class="nf-title" rows="1" maxlength="140" placeholder="Название задачи" autocomplete="off" enterkeyhint="done" aria-label="Название задачи"></textarea>
     </div>
     <div class="nf-sum" id="f-sum"></div>
+    <div class="nf-bar" id="f-bar"></div>
     <div class="nf-subs" id="f-subwrap" hidden>
       <div class="nf-sublist" id="f-subs"></div>
       <div class="addrow">
@@ -542,7 +550,6 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         <button class="go" id="f-subadd" type="button" aria-label="Добавить подзадачу">+</button>
       </div>
     </div>
-    <div class="nf-bar" id="f-bar"></div>
     <div class="nf-panel" id="f-panel" hidden></div>
   </form>
 </div>
@@ -1442,7 +1449,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
   /* ======================= Supabase: вход, данные, синхронизация ======================= */
   var cfg = window.APP_CONFIG || {};
   var tg = window.Telegram && window.Telegram.WebApp;
-  if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} }
+  if (tg) { try { tg.ready(); tg.expand(); } catch (e) {} try { if (tg.disableVerticalSwipes) tg.disableVerticalSwipes(); } catch (e) {} }
   var sb = null, ready = false, me = null, inviteCode = '', justCreated = false;
   var snap = {}, listSnap = {}, tq = {}, inflight = 0, reloadTimer = null, settingsEl = null;
 
