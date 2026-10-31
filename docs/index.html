@@ -2023,7 +2023,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     sg.addEventListener('click', addSub);
     si.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSub(); } });
     /* поле внизу: при вводе прокручиваем его наверх, чтобы клавиатура не закрыла */
-    si.addEventListener('focus', function () { setTimeout(keepFocusedVisible, 350); });
+    si.addEventListener('focus', function () { setTimeout(function () { si.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 250); });
     ar.appendChild(si); ar.appendChild(sg); sb.appendChild(ar);
     section('Подзадачи', sb);
 
@@ -2090,34 +2090,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     renderForm();
     fBody.scrollTop = 0;
     scrim.hidden = false;
-    fitScrim();
     renderHl();
     /* iOS открывает клавиатуру только если фокус ставится прямо во время нажатия, без задержки */
     fTitle.focus();
     setTimeout(function () { if (!document.activeElement || document.activeElement === document.body) fTitle.focus(); }, 60);
   }
-  function closeSheet() { scrim.hidden = true; scrim.style.top = scrim.style.height = scrim.style.bottom = ''; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
-  /* Форма занимает ровно видимую часть экрана над клавиатурой. iOS при открытии клавиатуры
-     прокручивает страницу; подгоняем форму под видимую область, чтобы поле ввода не уезжало. */
-  function fitScrim() {
-    var vv = window.visualViewport;
-    if (scrim.hidden || !vv) return;
-    scrim.style.top = vv.offsetTop + 'px';
-    scrim.style.height = vv.height + 'px';
-    scrim.style.bottom = 'auto';
-    keepFocusedVisible();
-  }
-  function keepFocusedVisible() {
-    var a = document.activeElement;
-    if (scrim.hidden || !a || !fBody.contains(a)) return;
-    var br = fBody.getBoundingClientRect(), ar = a.getBoundingClientRect();
-    if (ar.bottom > br.bottom - 12) fBody.scrollTop += ar.bottom - br.bottom + 24;
-    else if (ar.top < br.top + 8) fBody.scrollTop -= br.top - ar.top + 16;
-  }
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', fitScrim);
-    window.visualViewport.addEventListener('scroll', fitScrim);
-  }
+  function closeSheet() { scrim.hidden = true; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 
   document.getElementById('add').addEventListener('click', function () { openSheet(null); });
   document.getElementById('close').addEventListener('click', closeSheet);
