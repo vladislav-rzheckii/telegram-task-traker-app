@@ -1,6 +1,8 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Наши дела</title>
 <meta name="theme-color" content="#2481cc">
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500;600&display=swap">
 <style>
@@ -231,8 +233,25 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 20px; letter
 .late-date { color: var(--danger); }
 
 /* Раскрытая задача */
-.detail { padding: 0 14px 14px 50px; display: grid; gap: 14px; }
-.sub-list { display: grid; gap: 2px; }
+.detail { padding: 0 14px 14px 50px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.actbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.actbar .pill svg { width: 16px; height: 16px; }
+.pill[aria-expanded="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.ibtns { display: flex; gap: 6px; }
+.ibtn { width: 40px; height: 36px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); display: grid; place-items: center; color: var(--muted); padding: 0; }
+.ibtn svg { width: 18px; height: 18px; }
+.ibtn.danger { color: var(--danger); }
+.ibtn.on { color: var(--her); border-color: var(--her); background: var(--her-soft); }
+.ibtn.on svg { fill: currentColor; }
+.dsec { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.dsec-h { display: flex; justify-content: space-between; align-items: baseline; }
+.cap { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.cnt { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ghosts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ghosts.one-col { grid-template-columns: minmax(0, 1fr); }
+.ghost { border: 1px dashed var(--muted); background: transparent; border-radius: 12px; padding: 10px 6px; color: var(--muted); display: flex; gap: 6px; align-items: center; justify-content: center; font-size: 13.5px; min-width: 0; }
+.ghost svg { width: 15px; height: 15px; }
+.sub-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
 .sub { display: flex; align-items: center; gap: 10px; min-height: 30px; }
 .subcheck { flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.8px solid var(--muted); background: transparent; padding: 0; display: grid; place-items: center; color: var(--on-bright); }
 .subcheck svg { width: 11px; height: 11px; opacity: 0; }
@@ -256,7 +275,7 @@ h1 { font-family: var(--font-display); font-weight: 600; font-size: 20px; letter
 .pill svg { width: 14px; height: 14px; }
 .pill.on { border-color: var(--her); color: var(--her); background: var(--her-soft); }
 .pill.danger { color: var(--danger); }
-.comments { display: grid; gap: 6px; font-size: 13.5px; }
+.comments { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; font-size: 13.5px; }
 .cm { overflow-wrap: anywhere; }
 .cm b { font-weight: 600; margin-right: 6px; }
 .cm b.him { color: var(--him); }
@@ -348,6 +367,11 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
   font: inherit; font-size: 16px; color: var(--fg); background: var(--bg);
   border: 1px solid var(--line); border-radius: 12px; padding: 11px 12px; width: 100%; min-width: 0;
 }
+/* iOS: поля даты и времени игнорируют ширину, пока не сброшен системный вид */
+input[type="date"], input[type="time"] { -webkit-appearance: none; appearance: none; display: block; max-width: 100%; min-height: 46px; text-align: left; }
+input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align: left; }
+input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-edit { padding: 0; }
+.sheet { overflow-x: hidden; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .seg { display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: 6px; }
 .seg button, .pick {
@@ -466,7 +490,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
         <input type="time" id="f-time">
       </div>
     </div>
-    <button class="pick" id="f-nodate" type="button" aria-pressed="false">Без даты, во входящие</button>
+    <button class="pick" id="f-nodate" type="button" aria-pressed="false">Без даты, в Backlog</button>
     <div class="f">Важность
       <div class="seg" id="f-prio"></div>
     </div>
@@ -693,7 +717,12 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     x: svg('<path d="M6 6l12 12M18 6L6 18"/>', 2.4),
     left: svg('<path d="M15 5l-7 7 7 7"/>', 2.2),
     right: svg('<path d="M9 5l7 7-7 7"/>', 2.2),
-    cal: svg('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v4M10 15h4"/>')
+    cal: svg('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M12 13v4M10 15h4"/>'),
+    cal0: svg('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>'),
+    pen: svg('<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/>'),
+    trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>'),
+    chev: svg('<path d="M6 9l6 6 6-6"/>'),
+    plus: svg('<path d="M12 5v14M5 12h14"/>')
   };
 
   function el(tag, cls, text) {
@@ -770,7 +799,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
   var TABS = [
     { k: 'list', t: 'Задачи', i: navIcon('<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.4 1.4L7 5M3.5 12l1.4 1.4L7 11M3.5 18l1.4 1.4L7 17"/>') },
     { k: 'cal', t: 'Календарь', i: navIcon('<rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/>') },
-    { k: 'inbox', t: 'Входящие', i: navIcon('<path d="M3.5 13.5l2.2-7A2 2 0 017.6 5h8.8a2 2 0 011.9 1.5l2.2 7"/><path d="M3.5 13.5V18a2 2 0 002 2h13a2 2 0 002-2v-4.5h-5.5a3 3 0 01-3 2.5h-1a3 3 0 01-3-2.5z"/>') },
+    { k: 'inbox', t: 'Backlog', i: navIcon('<path d="M3.5 13.5l2.2-7A2 2 0 017.6 5h8.8a2 2 0 011.9 1.5l2.2 7"/><path d="M3.5 13.5V18a2 2 0 002 2h13a2 2 0 002-2v-4.5h-5.5a3 3 0 01-3 2.5h-1a3 3 0 01-3-2.5z"/>') },
     { k: 'lists', t: 'Списки', i: navIcon('<path d="M3.5 7a2 2 0 012-2H10l2 2.5h6.5a2 2 0 012 2V17a2 2 0 01-2 2h-13a2 2 0 01-2-2z"/>') }
   ];
   function renderHeader() {
@@ -858,7 +887,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     if (t.comments.length) meta.appendChild(metaItem('', IC.chat, String(t.comments.length)));
     if (t.thanks.length) meta.appendChild(metaItem('pr p3', IC.heart, String(t.thanks.length)));
     body.appendChild(meta);
-    body.addEventListener('click', function () { expanded = expanded === t.id ? null : t.id; renderAll(); });
+    body.addEventListener('click', function () { expanded = expanded === t.id ? null : t.id; moveOpen = null; renderAll(); });
     main.appendChild(c); main.appendChild(body);
     if (inbox) {
       var sb = el('button', 'sched'); sb.type = 'button'; sb.innerHTML = IC.cal;
@@ -872,83 +901,141 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     return row;
   }
 
+  var moveOpen = null, subOpen = {}, cmOpen = {};
+  function dsection(title, count) {
+    var sec = el('div', 'dsec');
+    var h = el('div', 'dsec-h');
+    h.appendChild(el('span', 'cap', title));
+    if (count) h.appendChild(el('span', 'cnt', count));
+    sec.appendChild(h);
+    return sec;
+  }
+  function ghostBtn(label, fn) {
+    var b = el('button', 'ghost'); b.type = 'button';
+    b.innerHTML = IC.plus; b.appendChild(document.createTextNode(label));
+    b.addEventListener('click', fn);
+    return b;
+  }
   function detail(t) {
     var box = el('div', 'detail');
-    if (t.subs.length) {
-      var sl = el('div', 'sub-list');
-      t.subs.forEach(function (s, i) {
-        var r = el('div', 'sub' + (s.done ? ' done' : ''));
-        var cb = el('button', 'subcheck'); cb.type = 'button'; cb.innerHTML = IC.check;
-        cb.setAttribute('aria-label', s.done ? 'Снять отметку с подзадачи' : 'Отметить подзадачу');
-        cb.addEventListener('click', function () { s.done = !s.done; renderAll(); });
-        var x = el('button', 'x'); x.type = 'button'; x.innerHTML = IC.x; x.setAttribute('aria-label', 'Удалить подзадачу');
-        x.addEventListener('click', function () { t.subs.splice(i, 1); renderAll(); });
-        r.appendChild(cb); r.appendChild(el('span', 'st', s.t)); r.appendChild(x);
-        sl.appendChild(r);
-      });
-      box.appendChild(sl);
-    }
-    var add = el('div', 'addrow');
-    var inp = el('input', 'mini'); inp.type = 'text'; inp.placeholder = 'Добавить подзадачу'; inp.maxLength = 80;
-    inp.setAttribute('data-focus', 'sub-' + t.id); inp.setAttribute('aria-label', 'Новая подзадача'); inp.autocomplete = 'off';
-    var go = el('button', 'go', '+'); go.type = 'button'; go.setAttribute('aria-label', 'Добавить подзадачу');
-    function addSub() { var v = inp.value.trim(); if (!v) return; t.subs.push({ t: v, done: false }); pendingFocus = 'sub-' + t.id; renderAll(); }
-    go.addEventListener('click', addSub);
-    inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSub(); } });
-    add.appendChild(inp); add.appendChild(go);
-    box.appendChild(add);
 
-    var mv = el('div', 'row-l');
-    mv.appendChild(document.createTextNode('Перенести:'));
-    [['Сегодня', 0], ['Завтра', 1], ['Через неделю', 7]].forEach(function (p) {
-      var b = el('button', 'pill', p[0]); b.type = 'button';
-      b.addEventListener('click', function () { moveTask(t, rel(p[1])); });
-      mv.appendChild(b);
-    });
-    if (t.date && !t.rep) {
-      var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
-      nb.addEventListener('click', function () {
-        var od = t.date, ot = t.time;
-        t.date = ''; t.time = ''; expanded = null;
-        toast('Убрано во входящие', function () { t.date = od; t.time = ot; });
-        renderAll();
-      });
-      mv.appendChild(nb);
+    /* 1. Панель действий: «Перенести» слева, остальное иконками справа */
+    var bar = el('div', 'actbar');
+    var mvb = el('button', 'pill'); mvb.type = 'button';
+    mvb.innerHTML = IC.cal0 + 'Перенести' + IC.chev;
+    mvb.setAttribute('aria-expanded', String(moveOpen === t.id));
+    mvb.addEventListener('click', function () { moveOpen = moveOpen === t.id ? null : t.id; renderAll(); });
+    bar.appendChild(mvb);
+    function ib(cls, icon, label, fn) {
+      var b = el('button', 'ibtn' + (cls ? ' ' + cls : '')); b.type = 'button';
+      b.innerHTML = icon; b.setAttribute('aria-label', label); b.title = label;
+      b.addEventListener('click', fn);
+      return b;
     }
-    box.appendChild(mv);
-
-    var ac = el('div', 'row-l');
-    var th = el('button', 'pill' + (t.thanks.indexOf(viewer) >= 0 ? ' on' : '')); th.type = 'button';
-    th.innerHTML = IC.heart; th.appendChild(document.createTextNode('Спасибо'));
-    th.addEventListener('click', function () {
+    var ibs = el('div', 'ibtns');
+    var thanked = t.thanks.indexOf(viewer) >= 0;
+    var th = ib(thanked ? 'on' : '', IC.heart, 'Спасибо', function () {
       var i = t.thanks.indexOf(viewer);
       if (i >= 0) t.thanks.splice(i, 1); else t.thanks.push(viewer);
       renderAll();
     });
-    var ed = el('button', 'pill', 'Изменить'); ed.type = 'button';
-    ed.addEventListener('click', function () { openSheet(t); });
-    var del = el('button', 'pill danger', 'Удалить'); del.type = 'button';
-    del.addEventListener('click', function () { deleteTask(t); });
-    ac.appendChild(th); ac.appendChild(ed); ac.appendChild(del);
-    box.appendChild(ac);
+    th.setAttribute('aria-pressed', String(thanked));
+    ibs.appendChild(th);
+    ibs.appendChild(ib('', IC.pen, 'Изменить', function () { openSheet(t); }));
+    ibs.appendChild(ib('danger', IC.trash, 'Удалить', function () { moveOpen = null; deleteTask(t); }));
+    bar.appendChild(ibs);
+    box.appendChild(bar);
 
-    var cm = el('div', 'comments');
-    t.comments.forEach(function (c) {
-      var p = el('div', 'cm');
-      p.appendChild(el('b', c.who, NAMES[c.who]));
-      p.appendChild(document.createTextNode(c.text));
-      cm.appendChild(p);
-    });
-    box.appendChild(cm);
-    var cr = el('div', 'addrow');
-    var ci = el('input', 'mini'); ci.type = 'text'; ci.placeholder = 'Комментарий'; ci.maxLength = 200;
-    ci.setAttribute('data-focus', 'cm-' + t.id); ci.setAttribute('aria-label', 'Комментарий'); ci.autocomplete = 'off';
-    var cg = el('button', 'go', 'Отправить'); cg.type = 'button';
-    function addCm() { var v = ci.value.trim(); if (!v) return; t.comments.push({ who: viewer, text: v }); pendingFocus = 'cm-' + t.id; renderAll(); }
-    cg.addEventListener('click', addCm);
-    ci.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addCm(); } });
-    cr.appendChild(ci); cr.appendChild(cg);
-    box.appendChild(cr);
+    if (moveOpen === t.id) {
+      var mv = el('div', 'row-l');
+      [['Сегодня', 0], ['Завтра', 1], ['Через неделю', 7]].forEach(function (p) {
+        var b = el('button', 'pill', p[0]); b.type = 'button';
+        b.addEventListener('click', function () { moveOpen = null; moveTask(t, rel(p[1])); });
+        mv.appendChild(b);
+      });
+      if (t.date && !t.rep) {
+        var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
+        nb.addEventListener('click', function () {
+          var od = t.date, ot = t.time;
+          t.date = ''; t.time = ''; expanded = null; moveOpen = null;
+          toast('Перенесено в Backlog', function () { t.date = od; t.time = ot; });
+          renderAll();
+        });
+        mv.appendChild(nb);
+      }
+      box.appendChild(mv);
+    }
+
+    var hasSubs = t.subs.length > 0, hasCm = t.comments.length > 0;
+    var showSubs = hasSubs || !!subOpen[t.id], showCm = hasCm || !!cmOpen[t.id];
+    function openSubs() { subOpen[t.id] = true; pendingFocus = 'sub-' + t.id; renderAll(); }
+    function openCm() { cmOpen[t.id] = true; pendingFocus = 'cm-' + t.id; renderAll(); }
+
+    /* 2. Подзадачи */
+    if (showSubs) {
+      var ss = dsection('Подзадачи', hasSubs ? t.subs.filter(function (s) { return s.done; }).length + ' из ' + t.subs.length : '');
+      if (hasSubs) {
+        var sl = el('div', 'sub-list');
+        t.subs.forEach(function (s, i) {
+          var r = el('div', 'sub' + (s.done ? ' done' : ''));
+          var cb = el('button', 'subcheck'); cb.type = 'button'; cb.innerHTML = IC.check;
+          cb.setAttribute('aria-label', s.done ? 'Снять отметку с подзадачи' : 'Отметить подзадачу');
+          cb.addEventListener('click', function () { s.done = !s.done; renderAll(); });
+          var x = el('button', 'x'); x.type = 'button'; x.innerHTML = IC.x; x.setAttribute('aria-label', 'Удалить подзадачу');
+          x.addEventListener('click', function () { t.subs.splice(i, 1); renderAll(); });
+          r.appendChild(cb); r.appendChild(el('span', 'st', s.t)); r.appendChild(x);
+          sl.appendChild(r);
+        });
+        ss.appendChild(sl);
+      }
+      var add = el('div', 'addrow');
+      var inp = el('input', 'mini'); inp.type = 'text'; inp.placeholder = 'Добавить подзадачу'; inp.maxLength = 80;
+      inp.setAttribute('data-focus', 'sub-' + t.id); inp.setAttribute('aria-label', 'Новая подзадача'); inp.autocomplete = 'off';
+      var go = el('button', 'go', '+'); go.type = 'button'; go.setAttribute('aria-label', 'Добавить подзадачу');
+      function addSub() { var v = inp.value.trim(); if (!v) return; t.subs.push({ t: v, done: false }); pendingFocus = 'sub-' + t.id; renderAll(); }
+      go.addEventListener('click', addSub);
+      inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSub(); } });
+      add.appendChild(inp); add.appendChild(go);
+      ss.appendChild(add);
+      box.appendChild(ss);
+    }
+
+    /* 3. Комментарии */
+    if (showCm) {
+      var cs = dsection('Комментарии', hasCm ? String(t.comments.length) : '');
+      if (hasCm) {
+        var cm = el('div', 'comments');
+        t.comments.forEach(function (c) {
+          var p = el('div', 'cm');
+          p.appendChild(el('b', c.who, NAMES[c.who]));
+          p.appendChild(document.createTextNode(c.text));
+          cm.appendChild(p);
+        });
+        cs.appendChild(cm);
+      }
+      var cr = el('div', 'addrow');
+      var ci = el('input', 'mini'); ci.type = 'text'; ci.placeholder = 'Добавить комментарий'; ci.maxLength = 200;
+      ci.setAttribute('data-focus', 'cm-' + t.id); ci.setAttribute('aria-label', 'Новый комментарий'); ci.autocomplete = 'off';
+      var cg = el('button', 'go', '+'); cg.type = 'button'; cg.setAttribute('aria-label', 'Добавить комментарий');
+      function addCm() { var v = ci.value.trim(); if (!v) return; t.comments.push({ who: viewer, text: v }); pendingFocus = 'cm-' + t.id; renderAll(); }
+      cg.addEventListener('click', addCm);
+      ci.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addCm(); } });
+      cr.appendChild(ci); cr.appendChild(cg);
+      cs.appendChild(cr);
+      box.appendChild(cs);
+    }
+
+    /* 4. Пустые блоки: компактные кнопки «+ Подзадача» и «+ Комментарий» */
+    if (!showSubs && !showCm) {
+      var g2 = el('div', 'ghosts');
+      g2.appendChild(ghostBtn('Подзадача', openSubs));
+      g2.appendChild(ghostBtn('Комментарий', openCm));
+      box.appendChild(g2);
+    } else if (!showSubs || !showCm) {
+      var g1 = el('div', 'ghosts one-col');
+      g1.appendChild(!showSubs ? ghostBtn('Подзадача', openSubs) : ghostBtn('Комментарий', openCm));
+      box.appendChild(g1);
+    }
     return box;
   }
 
@@ -988,7 +1075,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     if (inboxN) {
       var bn = el('button', 'banner'); bn.type = 'button';
       var bt = el('span', 'bt');
-      bt.appendChild(el('b', null, 'Во входящих ' + inboxN + ' ' + plural(inboxN, 'задача', 'задачи', 'задач') + ' без даты'));
+      bt.appendChild(el('b', null, 'В Backlog: ' + inboxN + ' ' + plural(inboxN, 'задача', 'задачи', 'задач') + ' без даты'));
       bt.appendChild(el('small', null, 'Назначьте день или сделайте, когда будет время'));
       bn.appendChild(bt);
       var bi = el('span'); bi.innerHTML = IC.right; bn.appendChild(bi);
@@ -1223,7 +1310,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     main.appendChild(fc);
   }
 
-  /* Вкладка «Входящие» */
+  /* Вкладка «Backlog» */
   function inboxTasks(done) { return tasks.filter(function (t) { return visible(t) && !t.date && !t.rep && !!t.done === done; }); }
   function assignDate(t, d) {
     var oldDate = t.date;
@@ -1248,13 +1335,13 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     return box;
   }
   function renderInbox(main) {
-    main.appendChild(el('p', 'inbox-note', 'Общий список без дат. Назначьте задаче день или отметьте её, когда дойдут руки.'));
+    main.appendChild(el('p', 'inbox-note', 'Общий список задач без даты. Назначьте задаче день или отметьте её, когда дойдут руки.'));
     var qa = el('div', 'qa');
     var inp = el('input'); inp.type = 'text'; inp.id = 'inbox-add'; inp.maxLength = 140; inp.autocomplete = 'off';
     inp.placeholder = 'Записать задачу, дату можно не ставить'; inp.value = inboxDraft;
-    inp.setAttribute('data-focus', 'inbox-add'); inp.setAttribute('aria-label', 'Новая задача во входящие');
+    inp.setAttribute('data-focus', 'inbox-add'); inp.setAttribute('aria-label', 'Новая задача в Backlog');
     inp.addEventListener('input', function () { inboxDraft = inp.value; });
-    var go = el('button', 'go', '+'); go.type = 'button'; go.setAttribute('aria-label', 'Добавить во входящие');
+    var go = el('button', 'go', '+'); go.type = 'button'; go.setAttribute('aria-label', 'Добавить в Backlog');
     function addInbox() {
       var raw = inp.value.trim(); if (!raw) return;
       var p = parseSmart(raw), r = p.rec;
@@ -1274,7 +1361,7 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     if (open.length) main.appendChild(group('Ждут своего дня', String(open.length), open, '', { inbox: true }));
     else {
       var e = el('div', 'empty');
-      e.appendChild(el('b', null, 'Входящие пусты'));
+      e.appendChild(el('b', null, 'Backlog пуст'));
       e.appendChild(document.createTextNode('Записывайте сюда всё, что нужно сделать когда-нибудь.'));
       main.appendChild(e);
     }
@@ -1282,7 +1369,9 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
     if (done.length) main.appendChild(group('Сделано без даты', '', done, '', { inbox: true }));
   }
 
+  var lastExpanded = null;
   function renderAll() {
+    if (expanded !== lastExpanded) { subOpen = {}; cmOpen = {}; moveOpen = null; lastExpanded = expanded; }
     autosync();
     renderHeader();
     var main = document.getElementById('main');
