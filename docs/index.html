@@ -417,9 +417,8 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .sched { flex: none; align-self: center; border: 0; background: var(--accent-soft); color: var(--accent); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; padding: 0; }
 .sched .ic { width: 18px; height: 18px; }
 .sched[aria-expanded="true"] { background: var(--accent); color: var(--accent-fg); }
-.sched-box { padding: 0 14px 14px 50px; display: grid; gap: 8px; }
-.sched-l { font-size: 12.5px; color: var(--muted); }
-.sched-box input[type="date"] { width: auto; font-size: 14px; padding: 5px 10px; border-radius: 999px; }
+.pill-date { position: relative; overflow: hidden; cursor: pointer; }
+.pill-date input[type="date"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; cursor: pointer; }
 #f-nodate { --c: var(--accent); justify-self: start; padding: 8px 14px; }
 @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
 .gate { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: grid; place-items: center; padding: 24px; overflow-y: auto; }
@@ -735,7 +734,10 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
   function listById(id) { for (var i = 0; i < lists.length; i++) if (lists[i].id === id) return lists[i]; return null; }
   function findTask(id) { for (var i = 0; i < tasks.length; i++) if (tasks[i].id === id) return tasks[i]; return null; }
 
+  var DONE_TTL_DAYS = 10;
+  function expired(t) { return !!(t.done && t.doneAt && Date.now() - new Date(t.doneAt).getTime() > DONE_TTL_DAYS * 864e5); }
   function visible(t) {
+    if (expired(t)) return false;
     if (listFilter && t.list !== listFilter) return false;
     if (filter === 'mine') return t.who === viewer || t.who === 'both';
     if (filter === 'theirs') return t.who === other() || t.who === 'both';
@@ -780,6 +782,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       toast('Готово. Следующий раз: ' + shortDate(nd), function () { Object.assign(t, JSON.parse(snap)); });
     } else {
       t.done = !t.done;
+      t.doneAt = t.done ? new Date().toISOString() : '';
     }
     renderAll();
   }
@@ -891,12 +894,15 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     main.appendChild(c); main.appendChild(body);
     if (inbox) {
       var sb = el('button', 'sched'); sb.type = 'button'; sb.innerHTML = IC.cal;
-      sb.setAttribute('aria-label', 'Назначить день'); sb.setAttribute('aria-expanded', String(scheduling === t.id));
-      sb.addEventListener('click', function () { scheduling = scheduling === t.id ? null : t.id; renderAll(); });
+      sb.setAttribute('aria-label', 'Назначить день'); sb.setAttribute('aria-expanded', String(expanded === t.id && moveOpen === t.id));
+      sb.addEventListener('click', function () {
+        if (expanded === t.id && moveOpen === t.id) { expanded = null; moveOpen = null; }
+        else { expanded = t.id; moveOpen = t.id; }
+        renderAll();
+      });
       main.appendChild(sb);
     }
     row.appendChild(main);
-    if (inbox && scheduling === t.id) row.appendChild(schedPicker(t));
     if (expanded === t.id) row.appendChild(detail(t));
     return row;
   }
@@ -953,6 +959,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         b.addEventListener('click', function () { moveOpen = null; moveTask(t, rel(p[1])); });
         mv.appendChild(b);
       });
+      var dp = el('label', 'pill pill-date'); dp.innerHTML = IC.cal; dp.appendChild(document.createTextNode('Выбрать дату'));
+      var di = el('input'); di.type = 'date'; di.min = todayIso; di.value = t.date || '';
+      di.setAttribute('aria-label', 'Выбрать дату в календаре');
+      di.addEventListener('click', function () { try { if (di.showPicker) di.showPicker(); } catch (e) {} });
+      di.addEventListener('change', function () { if (di.value) { moveOpen = null; moveTask(t, di.value); } });
+      dp.appendChild(di); mv.appendChild(dp);
       if (t.date && !t.rep) {
         var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
         nb.addEventListener('click', function () {
@@ -1095,7 +1107,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       main.appendChild(group(label, sub, dates[d].sort(cmp), d === todayIso ? 'now' : ''));
     });
     var done = all.filter(function (t) { return t.done; });
-    if (done.length) main.appendChild(group('Выполнено', '', done, '', { showDate: false }));
+    if (done.length) main.appendChild(group('Выполнено', 'убираются через ' + DONE_TTL_DAYS + ' дней', done, '', { showDate: false }));
 
     if (!all.length) {
       var e = el('div', 'empty');
@@ -1318,22 +1330,6 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     toast('Назначено: ' + relLabel(d), function () { t.date = oldDate; });
     renderAll();
   }
-  function schedPicker(t) {
-    var box = el('div', 'sched-box');
-    box.appendChild(el('span', 'sched-l', 'Когда сделать'));
-    var row = el('div', 'row-l');
-    [['Сегодня', rel(0)], ['Завтра', rel(1)], ['В субботу', nextWd(6, false)], ['Через неделю', rel(7)]].forEach(function (p) {
-      var b = el('button', 'pill', p[0]); b.type = 'button';
-      b.addEventListener('click', function () { assignDate(t, p[1]); });
-      row.appendChild(b);
-    });
-    var di = el('input'); di.type = 'date'; di.id = 'sched-date-' + t.id; di.min = todayIso;
-    di.setAttribute('aria-label', 'Выбрать другую дату');
-    di.addEventListener('change', function () { if (di.value) assignDate(t, di.value); });
-    row.appendChild(di);
-    box.appendChild(row);
-    return box;
-  }
   function renderInbox(main) {
     main.appendChild(el('p', 'inbox-note', 'Общий список задач без даты. Назначьте задаче день или отметьте её, когда дойдут руки.'));
     var qa = el('div', 'qa');
@@ -1371,7 +1367,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 
   var lastExpanded = null;
   function renderAll() {
-    if (expanded !== lastExpanded) { subOpen = {}; cmOpen = {}; moveOpen = null; lastExpanded = expanded; }
+    if (expanded !== lastExpanded) { subOpen = {}; cmOpen = {}; lastExpanded = expanded; }
     autosync();
     renderHeader();
     var main = document.getElementById('main');
@@ -1505,7 +1501,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       date: row.due_date || '', time: row.due_time ? row.due_time.slice(0, 5) : '',
       prio: row.prio, list: row.list_id || '',
       rep: row.rep_unit ? { unit: row.rep_unit, every: row.rep_every } : null,
-      done: row.done, lastDone: row.last_done || '',
+      done: row.done, doneAt: row.done_at || '', lastDone: row.last_done || '',
       subs: row.subs || [], comments: comms || [], thanks: row.thanks || []
     };
   }
