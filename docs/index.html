@@ -417,19 +417,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .sched { flex: none; align-self: center; border: 0; background: var(--accent-soft); color: var(--accent); width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; padding: 0; }
 .sched .ic { width: 18px; height: 18px; }
 .sched[aria-expanded="true"] { background: var(--accent); color: var(--accent-fg); }
-/* Мини-календарь переноса */
-.minical { border: 1px solid var(--line); border-radius: 14px; padding: 8px; background: var(--bg); }
-.mc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.mc-title { font-weight: 600; font-size: 14px; }
-.mc-nav { border: 0; background: transparent; color: var(--accent); font-size: 22px; line-height: 1; width: 36px; height: 32px; border-radius: 10px; }
-.mc-nav:disabled { color: var(--muted); opacity: .4; }
-.mc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 2px; }
-.mc-wd { text-align: center; font-size: 11px; color: var(--muted); padding: 4px 0; }
-.mc-day { border: 0; background: transparent; color: inherit; height: 36px; border-radius: 10px; font-size: 14px; padding: 0; }
-.mc-day:disabled { color: var(--muted); opacity: .4; }
-.mc-day.today { font-weight: 700; color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
-.mc-day.cur { background: var(--accent-soft); }
-.mc-day:not(:disabled):active { background: var(--accent); color: var(--accent-fg); }
+/* Выбор даты при переносе */
+.pill-date { position: relative; overflow: hidden; cursor: pointer; }
+.pill-date input[type="date"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; cursor: pointer; }
+.confirm-move { flex: 1 0 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 12px; min-height: 44px; padding: 0 16px; background: var(--accent); color: var(--accent-fg); font-weight: 600; font-size: 15px; }
+.confirm-move[hidden] { display: none; }
+.confirm-move svg { width: 18px; height: 18px; }
 #f-nodate { --c: var(--accent); justify-self: start; padding: 8px 14px; }
 @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
 .gate { position: fixed; inset: 0; z-index: 50; background: var(--bg); display: grid; place-items: center; padding: 24px; overflow-y: auto; }
@@ -901,14 +894,14 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (t.comments.length) meta.appendChild(metaItem('', IC.chat, String(t.comments.length)));
     if (t.thanks.length) meta.appendChild(metaItem('pr p3', IC.heart, String(t.thanks.length)));
     body.appendChild(meta);
-    body.addEventListener('click', function () { expanded = expanded === t.id ? null : t.id; moveOpen = null; calOpen = null; renderAll(); });
+    body.addEventListener('click', function () { expanded = expanded === t.id ? null : t.id; moveOpen = null; renderAll(); });
     main.appendChild(c); main.appendChild(body);
     if (inbox) {
       var sb = el('button', 'sched'); sb.type = 'button'; sb.innerHTML = IC.cal;
       sb.setAttribute('aria-label', 'Назначить день'); sb.setAttribute('aria-expanded', String(expanded === t.id && moveOpen === t.id));
       sb.addEventListener('click', function () {
         if (expanded === t.id && moveOpen === t.id) { expanded = null; moveOpen = null; }
-        else { expanded = t.id; moveOpen = t.id; calOpen = null; }
+        else { expanded = t.id; moveOpen = t.id; }
         renderAll();
       });
       main.appendChild(sb);
@@ -918,39 +911,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     return row;
   }
 
-  var moveOpen = null, subOpen = {}, cmOpen = {}, calOpen = null, calYM = [0, 0];
-  var MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-  /* Свой мини-календарь: нативный выбор даты на iOS шлёт события при открытии и прокрутке, поэтому он не подходит для переноса в один тап */
-  function miniCal(t) {
-    var y = calYM[0], m = calYM[1];
-    var box = el('div', 'minical');
-    var head = el('div', 'mc-head');
-    function nav(dir, label, disabled) {
-      var b = el('button', 'mc-nav', dir < 0 ? '‹' : '›'); b.type = 'button'; b.setAttribute('aria-label', label); b.disabled = !!disabled;
-      b.addEventListener('click', function () { var d = new Date(y, m + dir, 1); calYM = [d.getFullYear(), d.getMonth()]; renderAll(); });
-      return b;
-    }
-    var now = new Date();
-    head.appendChild(nav(-1, 'Предыдущий месяц', y === now.getFullYear() && m === now.getMonth()));
-    head.appendChild(el('span', 'mc-title', MONTHS_NOM[m] + ' ' + y));
-    head.appendChild(nav(1, 'Следующий месяц'));
-    box.appendChild(head);
-    var grid = el('div', 'mc-grid');
-    ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].forEach(function (w) { grid.appendChild(el('span', 'mc-wd', w)); });
-    var first = new Date(y, m, 1), lead = (first.getDay() + 6) % 7, days = new Date(y, m + 1, 0).getDate();
-    for (var k = 0; k < lead; k++) grid.appendChild(el('span', 'mc-gap'));
-    for (var d = 1; d <= days; d++) {
-      (function (d) {
-        var ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-        var b = el('button', 'mc-day' + (ds === todayIso ? ' today' : '') + (ds === t.date ? ' cur' : ''), String(d)); b.type = 'button';
-        if (ds < todayIso) b.disabled = true;
-        b.addEventListener('click', function () { moveOpen = null; calOpen = null; moveTask(t, ds); });
-        grid.appendChild(b);
-      })(d);
-    }
-    box.appendChild(grid);
-    return box;
-  }
+  var moveOpen = null, subOpen = {}, cmOpen = {};
   function dsection(title, count) {
     var sec = el('div', 'dsec');
     var h = el('div', 'dsec-h');
@@ -973,7 +934,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     var mvb = el('button', 'pill'); mvb.type = 'button';
     mvb.innerHTML = IC.cal0 + 'Перенести' + IC.chev;
     mvb.setAttribute('aria-expanded', String(moveOpen === t.id));
-    mvb.addEventListener('click', function () { moveOpen = moveOpen === t.id ? null : t.id; calOpen = null; renderAll(); });
+    mvb.addEventListener('click', function () { moveOpen = moveOpen === t.id ? null : t.id; renderAll(); });
     bar.appendChild(mvb);
     function ib(cls, icon, label, fn) {
       var b = el('button', 'ibtn' + (cls ? ' ' + cls : '')); b.type = 'button';
@@ -1002,15 +963,23 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         b.addEventListener('click', function () { moveOpen = null; moveTask(t, rel(p[1])); });
         mv.appendChild(b);
       });
-      var dp = el('button', 'pill'); dp.type = 'button'; dp.innerHTML = IC.cal;
-      dp.appendChild(document.createTextNode('Выбрать дату'));
-      dp.setAttribute('aria-expanded', String(calOpen === t.id));
-      dp.addEventListener('click', function () {
-        if (calOpen === t.id) calOpen = null;
-        else { calOpen = t.id; var b0 = new Date(); calYM = [b0.getFullYear(), b0.getMonth()]; }
-        renderAll();
-      });
-      mv.appendChild(dp);
+      /* Нативный выбор даты. На iOS событие change приходит ещё при открытии календаря и при прокрутке колеса,
+         поэтому переносим только по кнопке подтверждения и ничего не перерисовываем до неё. */
+      var dp = el('label', 'pill pill-date'); dp.innerHTML = IC.cal;
+      var dl = el('span', null, 'Выбрать дату'); dp.appendChild(dl);
+      var di = el('input'); di.type = 'date'; di.min = todayIso;
+      di.setAttribute('aria-label', 'Выбрать дату в календаре');
+      var ok = el('button', 'confirm-move'); ok.type = 'button'; ok.hidden = true;
+      var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (!isIOS) di.addEventListener('click', function () { try { if (di.showPicker) di.showPicker(); } catch (e) {} });
+      function picked() {
+        if (!di.value || di.value < todayIso) { ok.hidden = true; dl.textContent = 'Выбрать дату'; return; }
+        dl.textContent = shortDate(di.value);
+        ok.innerHTML = IC.check; ok.appendChild(document.createTextNode('Перенести на ' + shortDate(di.value))); ok.hidden = false;
+      }
+      di.addEventListener('input', picked); di.addEventListener('change', picked);
+      ok.addEventListener('click', function () { if (di.value && di.value >= todayIso) { moveOpen = null; moveTask(t, di.value); } });
+      dp.appendChild(di); mv.appendChild(dp); mv.appendChild(ok);
       if (t.date && !t.rep) {
         var nb = el('button', 'pill', 'Без даты'); nb.type = 'button';
         nb.addEventListener('click', function () {
@@ -1022,7 +991,6 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         mv.appendChild(nb);
       }
       box.appendChild(mv);
-      if (calOpen === t.id) box.appendChild(miniCal(t));
     }
 
     var hasSubs = t.subs.length > 0, hasCm = t.comments.length > 0;
@@ -1414,7 +1382,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 
   var lastExpanded = null;
   function renderAll() {
-    if (expanded !== lastExpanded) { subOpen = {}; cmOpen = {}; calOpen = null; lastExpanded = expanded; }
+    if (expanded !== lastExpanded) { subOpen = {}; cmOpen = {}; lastExpanded = expanded; }
     autosync();
     renderHeader();
     var main = document.getElementById('main');
