@@ -401,6 +401,20 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .sheet.nf { gap: 10px; height: 100%; max-height: none; border-radius: 0; align-content: start;
   display: flex; flex-direction: column;
   padding-top: calc(14px + env(safe-area-inset-top, 0px)); overscroll-behavior: contain; }
+.sheet.nf { overflow: hidden; padding-bottom: 0; }
+.nf-head { display: flex; align-items: center; gap: 10px; }
+.nf-head h3 { flex: 1; min-width: 0; }
+.nf-save { border: 0; background: var(--accent); color: var(--accent-fg); border-radius: 999px; padding: 9px 18px; font-weight: 700; font-size: 15px; }
+.nf-save:disabled { opacity: .45; }
+.sheet.nf > .nf-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  margin: 0 calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding: 12px 16px calc(40px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
+.nf-sec { display: grid; gap: 8px; }
+.nf-lbl { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.nf-calbox { border: 1px solid var(--line); border-radius: 14px; padding: 8px; background: var(--bg); }
+.nf-pic { display: inline-grid; } .nf-pic .ic { width: 14px; height: 14px; }
+.nf-row .pill .ic { width: 15px; height: 15px; }
+.nf-every { font-size: 14px; color: var(--fg); }
 .nf-ctx { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .nf-ctx::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex: none; }
 .nf-tw { position: relative; }
@@ -530,11 +544,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 
 <div class="scrim" id="scrim" hidden>
   <form class="sheet nf" id="form" aria-label="Задача" novalidate>
-    <div class="sheet-head">
-      <h3 id="f-head">Новая задача</h3>
+    <div class="sheet-head nf-head">
       <button class="close" id="close" type="button" aria-label="Закрыть">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
+      <h3 id="f-head">Новая задача</h3>
+      <button class="nf-save" id="save" type="button" disabled>Добавить</button>
     </div>
     <div class="nf-ctx" id="f-ctx" hidden></div>
     <div class="nf-tw">
@@ -542,15 +557,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       <textarea id="f-title" class="nf-title" rows="1" maxlength="140" placeholder="Название задачи" autocomplete="off" enterkeyhint="done" aria-label="Название задачи"></textarea>
     </div>
     <div class="nf-sum" id="f-sum"></div>
-    <div class="nf-bar" id="f-bar"></div>
-    <div class="nf-subs" id="f-subwrap" hidden>
-      <div class="nf-sublist" id="f-subs"></div>
-      <div class="addrow">
-        <input type="text" class="mini" id="f-subinput" maxlength="80" placeholder="Добавить подзадачу" autocomplete="off" aria-label="Новая подзадача">
-        <button class="go" id="f-subadd" type="button" aria-label="Добавить подзадачу">+</button>
-      </div>
-    </div>
-    <div class="nf-panel" id="f-panel" hidden></div>
+    <div class="nf-body" id="f-body"></div>
   </form>
 </div>
 
@@ -1751,15 +1758,14 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     renderTheme();
   });
 
-  /* Форма задачи. Параметры спрятаны в ряд иконок, панель открывается на месте клавиатуры. */
+  /* Форма задачи. Все параметры показаны сразу под названием; пока вводится текст, нижнюю часть
+     закрывает клавиатура. «Готово» на клавиатуре или прокрутка параметров её убирают. */
   var scrim = document.getElementById('scrim');
   var fTitle = document.getElementById('f-title');
-  var subInput = document.getElementById('f-subinput');
-  var form = null, base = null, fOpen = null, fTab = 'date', fCal = [0, 0], fIgnore = [], fSpans = [], fIgnSpans = [];
+  var fBody = document.getElementById('f-body');
+  var fSave = document.getElementById('save');
+  var form = null, base = null, fCalOpen = false, fCal = [0, 0], fIgnore = [], fSpans = [], fIgnSpans = [], fSubFocus = false;
   var fHl = document.getElementById('f-hl');
-  var IC_USER = svg('<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.3-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 010 7M18 14.8c2 .7 3.2 2.5 3.6 5.2"/>');
-  var IC_LIST = svg('<path d="M3 6a2 2 0 012-2h4l2 3h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>');
-  var IC_UP = svg('<path d="M12 19V5M6 11l6-6 6 6"/>', 2.4);
   var FKEYS = ['date', 'time', 'who', 'prio', 'list', 'rep'];
   function seg(box, opts, val, pick) {
     box.textContent = '';
@@ -1769,6 +1775,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       b.style.setProperty('--c', o.c || 'var(--accent)');
       b.setAttribute('aria-pressed', String(val === o.k));
       if (o.dot) b.appendChild(el('span', 'dot ' + o.dot));
+      if (o.ic) { var s = el('span', 'nf-pic'); s.innerHTML = o.ic; s.style.color = o.c; b.appendChild(s); }
       b.appendChild(document.createTextNode(o.t));
       b.addEventListener('click', function () { pick(o.k); });
       box.appendChild(b);
@@ -1796,25 +1803,44 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (form.rep) s += ' · ' + repLabel(form.rep);
     return s;
   }
-  function pill(label, on, fn) {
-    var b = el('button', 'pill' + (on ? ' on' : ''), label); b.type = 'button';
+  function pill(label, on, fn, icon) {
+    var b = el('button', 'pill' + (on ? ' on' : '')); b.type = 'button';
+    if (icon) b.innerHTML = icon;
+    if (label) b.appendChild(document.createTextNode(label));
     b.addEventListener('click', fn);
     return b;
   }
   function syncCal() { var d = form.date ? parseIso(form.date) : today; fCal = [d.getFullYear(), d.getMonth()]; }
-  function openPanel(k) {
-    fOpen = fOpen === k ? null : k;
-    if (fOpen === 'when') { syncCal(); fTab = 'date'; }
-    renderForm();
-    if (fOpen === 'subs') subInput.focus();
-    else if (fOpen) { fTitle.blur(); subInput.blur(); }
-    else fTitle.focus();
+  /* Ручной выбор важнее слова в названии: слово, которое задавало это поле, убирается из текста */
+  function releaseToken(k) {
+    var v = fTitle.value, pr = parseSmart(v, fIgnore);
+    if (!(k in pr.rec)) return;
+    for (var i = 0; i < pr.spans.length; i++) {
+      var sp = pr.spans[i], w = v.slice(sp[0], sp[1]).toLowerCase();
+      if (!(k in parseSmart(v, fIgnore.concat([w])).rec)) {
+        fTitle.value = (v.slice(0, sp[0]) + v.slice(sp[1])).replace(/\s{2,}/g, ' ').replace(/^\s+/, '');
+        return;
+      }
+    }
   }
-  function closePanel() { fOpen = null; renderForm(); fTitle.focus(); }
-  function pick(k, v, autoClose) { setF(k, v); if (autoClose) fOpen = null; renderForm(); }
+  function pick(k, v, also) {
+    (also || []).concat([k]).forEach(releaseToken);
+    setF(k, v);
+    var pr = parseSmart(fTitle.value, fIgnore);
+    fSpans = pr.spans; fIgnSpans = ignoredSpans(fTitle.value);
+    FKEYS.forEach(function (x) { form[x] = (x in pr.rec) ? pr.rec[x] : base[x]; });
+    renderHl(); renderForm();
+  }
+  function section(title, node) {
+    var w = el('div', 'nf-sec');
+    w.appendChild(el('div', 'nf-lbl', title));
+    w.appendChild(node);
+    fBody.appendChild(w);
+    return w;
+  }
 
   function calBox() {
-    var y = fCal[0], m = fCal[1], box = el('div');
+    var y = fCal[0], m = fCal[1], box = el('div', 'nf-calbox');
     var h = el('div', 'nf-calh');
     var pv = el('button'); pv.type = 'button'; pv.innerHTML = IC.left; pv.setAttribute('aria-label', 'Предыдущий месяц');
     pv.disabled = y === today.getFullYear() && m === today.getMonth();
@@ -1832,89 +1858,11 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       var ds = iso(new Date(y, m, d));
       var b = el('button', (ds === todayIso ? 'td ' : '') + (ds === form.date ? 'sel' : ''), String(d)); b.type = 'button';
       if (ds < todayIso) b.disabled = true;
-      b.addEventListener('click', function () { pick('date', ds); });
+      b.addEventListener('click', function () { fCalOpen = false; pick('date', ds); });
       g.appendChild(b);
     })(d);
     box.appendChild(g);
     return box;
-  }
-  function panelBody(p) {
-    if (fOpen === 'when') {
-      var tt = el('div', 'nf-tabs');
-      [['date', 'Дата'], ['time', 'Время'], ['rep', 'Повтор']].forEach(function (x) {
-        var b = el('button', fTab === x[0] ? 'on' : '', x[1]); b.type = 'button';
-        b.addEventListener('click', function () { fTab = x[0]; renderForm(); });
-        tt.appendChild(b);
-      });
-      p.appendChild(tt);
-      var r = el('div', 'nf-row');
-      if (fTab === 'date') {
-        [['Сегодня', todayIso], ['Завтра', addIsoDays(todayIso, 1)], ['Выходные', nextWd(6, false)]].forEach(function (q) {
-          r.appendChild(pill(q[0], form.date === q[1], function () { setF('date', q[1]); syncCal(); renderForm(); }));
-        });
-        r.appendChild(pill('Backlog', !form.date && !form.rep, function () { setF('time', ''); setF('rep', null); pick('date', ''); }));
-        p.appendChild(r); p.appendChild(calBox());
-      } else if (fTab === 'time') {
-        [['Без времени', ''], ['09:00', '09:00'], ['13:00', '13:00'], ['18:00', '18:00'], ['21:00', '21:00']].forEach(function (q) {
-          r.appendChild(pill(q[0], form.time === q[1], function () { if (q[1] && !form.date) setF('date', todayIso); pick('time', q[1]); }));
-        });
-        /* Своё время: кнопка-«пилюля» с прозрачным системным полем поверх. Пока колесо времени открыто,
-           форму не перерисовываем, иначе iOS закрывает выбор. */
-        var custom = form.time && ['09:00', '13:00', '18:00', '21:00'].indexOf(form.time) < 0;
-        var tp = el('label', 'pill nf-tpick' + (custom ? ' on' : ''));
-        tp.innerHTML = IC.clock;
-        var tl = el('span', null, custom ? form.time : 'Другое'); tp.appendChild(tl);
-        var ti = el('input'); ti.type = 'time'; ti.value = form.time || ''; ti.setAttribute('aria-label', 'Другое время');
-        function liveTime() {
-          if (!ti.value) return;
-          if (!form.date) setF('date', todayIso);
-          setF('time', ti.value); tl.textContent = ti.value; tp.classList.add('on');
-          renderSum();
-        }
-        if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) ti.addEventListener('click', function () { try { if (ti.showPicker) ti.showPicker(); } catch (e) {} });
-        ti.addEventListener('input', liveTime);
-        ti.addEventListener('change', liveTime);
-        ti.addEventListener('blur', function () { renderForm(); });
-        tp.appendChild(ti); r.appendChild(tp); p.appendChild(r);
-      } else {
-        [['Нет', ''], ['День', 'day'], ['Неделя', 'week'], ['Месяц', 'month']].forEach(function (q) {
-          r.appendChild(pill(q[0], (form.rep ? form.rep.unit : '') === q[1], function () {
-            if (q[1] && !form.date) setF('date', todayIso);
-            pick('rep', q[1] ? { unit: q[1], every: form.rep ? form.rep.every : 1 } : null);
-          }));
-        });
-        p.appendChild(r);
-        if (form.rep) {
-          var ev = el('div', 'nf-row');
-          ev.appendChild(el('span', null, 'Каждые'));
-          var n = el('input'); n.type = 'number'; n.min = 1; n.max = 99; n.value = form.rep.every; n.inputMode = 'numeric';
-          n.addEventListener('change', function () { setF('rep', { unit: form.rep.unit, every: Math.max(1, Math.min(99, parseInt(n.value, 10) || 1)) }); renderForm(); });
-          ev.appendChild(n);
-          ev.appendChild(el('span', null, form.rep.unit === 'day' ? 'дн.' : form.rep.unit === 'week' ? 'нед.' : 'мес.'));
-          p.appendChild(ev);
-        }
-      }
-    } else if (fOpen === 'who') {
-      var g = el('div', 'seg');
-      seg(g, [{ k: 'him', t: NAMES.him, c: 'var(--him)', dot: 'him' }, { k: 'her', t: NAMES.her, c: 'var(--her)', dot: 'her' }, { k: 'both', t: NAMES.both, c: 'var(--both)', dot: 'both' }], form.who, function (k) { pick('who', k, true); });
-      p.appendChild(g);
-    } else if (fOpen === 'prio') {
-      var g2 = el('div', 'seg');
-      seg(g2, PRIO_NAMES.map(function (n, i) { return { k: i, t: n, c: ['var(--muted)', 'var(--p1)', 'var(--p2)', 'var(--p3)'][i] }; }), form.prio, function (k) { pick('prio', k, true); });
-      p.appendChild(g2);
-    } else if (fOpen === 'list') {
-      var pl = el('div', 'picks');
-      [{ id: '', name: 'Без списка', color: 'var(--muted)' }].concat(lists).forEach(function (L) {
-        var b = el('button', 'pick'); b.type = 'button';
-        b.style.setProperty('--c', L.color);
-        b.setAttribute('aria-pressed', String(form.list === L.id));
-        if (L.id) { var sw = el('span', 'sw'); sw.style.background = L.color; b.appendChild(sw); }
-        b.appendChild(document.createTextNode(L.name));
-        b.addEventListener('click', function () { pick('list', L.id, true); });
-        pl.appendChild(b);
-      });
-      p.appendChild(pl);
-    }
   }
   function renderSum() {
     var ctx = document.getElementById('f-ctx'), ct = formCtx();
@@ -1923,52 +1871,116 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (form.prio) sum.push(PRIO_NAMES[form.prio]);
     var L = form.list ? listById(form.list) : null;
     if (L) sum.push(L.name);
+    if (form.subs.length) sum.push('подзадач: ' + form.subs.length);
     document.getElementById('f-sum').textContent = sum.join(' · ');
+    fSave.disabled = !fTitle.value.trim();
   }
   function renderForm() {
     renderSum();
+    var st = fBody.scrollTop;
+    fBody.textContent = '';
 
-    var sw = document.getElementById('f-subwrap');
-    sw.hidden = !(form.subs.length || fOpen === 'subs');
-    var sl = document.getElementById('f-subs'); sl.textContent = '';
+    /* 1. Кто */
+    var w = el('div', 'seg');
+    seg(w, [{ k: 'him', t: NAMES.him, c: 'var(--him)', dot: 'him' }, { k: 'her', t: NAMES.her, c: 'var(--her)', dot: 'her' }, { k: 'both', t: NAMES.both, c: 'var(--both)', dot: 'both' }], form.who, function (k) { pick('who', k); });
+    section('Кто', w);
+
+    /* 2. Когда */
+    var dr = el('div', 'nf-row');
+    var qd = [['Сегодня', todayIso], ['Завтра', addIsoDays(todayIso, 1)], ['Выходные', nextWd(6, false)]];
+    qd.forEach(function (q) { dr.appendChild(pill(q[0], form.date === q[1], function () { fCalOpen = false; pick('date', q[1]); })); });
+    dr.appendChild(pill('Backlog', !form.date && !form.rep, function () { fCalOpen = false; setF('time', ''); setF('rep', null); pick('date', '', ['time', 'rep']); }));
+    var odate = form.date && qd.every(function (q) { return q[1] !== form.date; });
+    var cb = pill(odate ? relLabel(form.date) : 'Календарь', odate || fCalOpen, function () { fCalOpen = !fCalOpen; syncCal(); renderForm(); }, IC.cal0);
+    cb.setAttribute('aria-expanded', String(fCalOpen));
+    dr.appendChild(cb);
+    var ws = section('Когда', dr);
+    if (fCalOpen) ws.appendChild(calBox());
+
+    /* 3. Время */
+    var tr = el('div', 'nf-row');
+    var TQ = ['09:00', '13:00', '18:00', '21:00'];
+    tr.appendChild(pill('Без времени', !form.time, function () { pick('time', ''); }));
+    TQ.forEach(function (q) { tr.appendChild(pill(q, form.time === q, function () { if (!form.date) setF('date', todayIso); pick('time', q); })); });
+    /* Своё время: кнопка с прозрачным системным полем поверх. Пока колесо открыто, форму не перерисовываем. */
+    var custom = form.time && TQ.indexOf(form.time) < 0;
+    var tp = el('label', 'pill nf-tpick' + (custom ? ' on' : ''));
+    tp.innerHTML = IC.clock;
+    var tl = el('span', null, custom ? form.time : 'Другое'); tp.appendChild(tl);
+    var ti = el('input'); ti.type = 'time'; ti.value = form.time || ''; ti.setAttribute('aria-label', 'Другое время');
+    function liveTime() {
+      if (!ti.value) return;
+      if (!form.date) setF('date', todayIso);
+      setF('time', ti.value); tl.textContent = ti.value; tp.classList.add('on');
+      renderSum();
+    }
+    if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) ti.addEventListener('click', function () { try { if (ti.showPicker) ti.showPicker(); } catch (e) {} });
+    ti.addEventListener('input', liveTime);
+    ti.addEventListener('change', liveTime);
+    ti.addEventListener('blur', function () { renderForm(); });
+    tp.appendChild(ti); tr.appendChild(tp);
+    section('Время', tr);
+
+    /* 4. Повтор — рядом со временем */
+    var rr = el('div', 'nf-row');
+    [['Нет', ''], ['Каждый день', 'day'], ['Каждую неделю', 'week'], ['Каждый месяц', 'month']].forEach(function (q) {
+      rr.appendChild(pill(q[0], (form.rep ? form.rep.unit : '') === q[1], function () {
+        if (q[1] && !form.date) setF('date', todayIso);
+        pick('rep', q[1] ? { unit: q[1], every: form.rep ? form.rep.every : 1 } : null);
+      }));
+    });
+    var rs = section('Повтор', rr);
+    if (form.rep) {
+      var ev = el('div', 'nf-row nf-every');
+      ev.appendChild(el('span', null, 'Каждые'));
+      var n = el('input'); n.type = 'number'; n.min = 1; n.max = 99; n.value = form.rep.every; n.inputMode = 'numeric';
+      n.addEventListener('change', function () { setF('rep', { unit: form.rep.unit, every: Math.max(1, Math.min(99, parseInt(n.value, 10) || 1)) }); renderForm(); });
+      ev.appendChild(n);
+      ev.appendChild(el('span', null, form.rep.unit === 'day' ? 'дн.' : form.rep.unit === 'week' ? 'нед.' : 'мес.'));
+      rs.appendChild(ev);
+    }
+
+    /* 5. Важность */
+    var pg = el('div', 'seg');
+    seg(pg, PRIO_NAMES.map(function (n, i) { return { k: i, t: n, c: ['var(--muted)', 'var(--p1)', 'var(--p2)', 'var(--p3)'][i], ic: i ? IC.flag : '' }; }), form.prio, function (k) { pick('prio', k); });
+    section('Важность', pg);
+
+    /* 6. Список */
+    var pl = el('div', 'picks');
+    [{ id: '', name: 'Без списка', color: 'var(--muted)' }].concat(lists).forEach(function (L) {
+      var b = el('button', 'pick'); b.type = 'button';
+      b.style.setProperty('--c', L.color);
+      b.setAttribute('aria-pressed', String(form.list === L.id));
+      if (L.id) { var sw = el('span', 'sw'); sw.style.background = L.color; b.appendChild(sw); }
+      b.appendChild(document.createTextNode(L.name));
+      b.addEventListener('click', function () { pick('list', L.id); });
+      pl.appendChild(b);
+    });
+    section('Список', pl);
+
+    /* 7. Подзадачи */
+    var sb = el('div', 'nf-subs');
     form.subs.forEach(function (s, i) {
       var r = el('div', 'nf-sub'); r.appendChild(el('span', null, '— ' + s.t));
       var x = el('button'); x.type = 'button'; x.innerHTML = IC.x; x.setAttribute('aria-label', 'Убрать подзадачу');
       x.addEventListener('click', function () { form.subs.splice(i, 1); renderForm(); });
-      r.appendChild(x); sl.appendChild(r);
+      r.appendChild(x); sb.appendChild(r);
     });
+    var ar = el('div', 'addrow');
+    var si = el('input', 'mini'); si.type = 'text'; si.id = 'f-subinput'; si.maxLength = 80; si.placeholder = 'Добавить подзадачу'; si.autocomplete = 'off';
+    si.setAttribute('aria-label', 'Новая подзадача'); si.setAttribute('enterkeyhint', 'next');
+    var sg = el('button', 'go', '+'); sg.type = 'button'; sg.setAttribute('aria-label', 'Добавить подзадачу');
+    function addSub() { var v = si.value.trim(); if (!v) return; form.subs.push({ t: v, done: false }); fSubFocus = true; renderForm(); }
+    sg.addEventListener('click', addSub);
+    si.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSub(); } });
+    /* поле внизу: при вводе прокручиваем его наверх, чтобы клавиатура не закрыла */
+    si.addEventListener('focus', function () { setTimeout(function () { si.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 250); });
+    ar.appendChild(si); ar.appendChild(sg); sb.appendChild(ar);
+    section('Подзадачи', sb);
 
-    var bar = document.getElementById('f-bar'); bar.textContent = '';
-    [['when', IC.cal0, !!(form.date || form.time || form.rep), 'Дата и время'],
-     ['who', IC_USER, form.who !== viewer, 'Для кого'],
-     ['prio', IC.flag, !!form.prio, 'Важность'],
-     ['list', IC_LIST, !!form.list, 'Список'],
-     ['subs', IC.sub, !!form.subs.length, 'Подзадачи']].forEach(function (x) {
-      var b = el('button', 'nf-ib' + (x[2] ? ' set' : '') + (fOpen === x[0] ? ' open' : '')); b.type = 'button';
-      b.innerHTML = x[1]; b.setAttribute('aria-label', x[3]); b.setAttribute('aria-expanded', String(fOpen === x[0]));
-      b.addEventListener('click', function () { openPanel(x[0]); });
-      bar.appendChild(b);
-    });
-    var sv = el('button', 'nf-send'); sv.type = 'button'; sv.id = 'save';
-    sv.addEventListener('click', saveForm);
-    sv.innerHTML = form.id ? IC.check : IC_UP;
-    sv.setAttribute('aria-label', form.id ? 'Сохранить' : 'Добавить задачу');
-    sv.disabled = !fTitle.value.trim();
-    bar.appendChild(sv);
-
-    var p = document.getElementById('f-panel'); p.textContent = '';
-    var hasPanel = !!fOpen && fOpen !== 'subs';
-    p.hidden = !hasPanel;
-    if (hasPanel) {
-      p.appendChild(el('div', 'nf-grab'));
-      var hd = el('div', 'nf-phead');
-      hd.appendChild(el('b', null, { when: 'Когда', who: 'Для кого', prio: 'Важность', list: 'Список' }[fOpen]));
-      var dn = el('button', 'nf-done', 'Готово'); dn.type = 'button'; dn.addEventListener('click', closePanel);
-      hd.appendChild(dn); p.appendChild(hd);
-      panelBody(p);
-    }
+    fBody.scrollTop = st;
+    if (fSubFocus) { fSubFocus = false; si.focus(); }
   }
-  /* Подсветка распознанных слов: под прозрачным полем лежит копия текста с выделением */
   function renderHl() {
     var v = fTitle.value, marks = [];
     fSpans.forEach(function (sp) { marks.push([sp[0], sp[1], 'mark']); });
@@ -1998,9 +2010,10 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     fIgnore = fIgnore.filter(function (w) { return new RegExp('(^|\\s)(' + escRe(w) + ')(?=\\s|$|[,;])', 'iu').test(v); });
     var pr = parseSmart(v, fIgnore);
     fSpans = pr.spans; fIgnSpans = ignoredSpans(v);
+    var changed = FKEYS.some(function (k) { var nv = (k in pr.rec) ? pr.rec[k] : base[k]; return JSON.stringify(nv) !== JSON.stringify(form[k]); });
     FKEYS.forEach(function (k) { form[k] = (k in pr.rec) ? pr.rec[k] : base[k]; });
     renderHl();
-    renderForm();
+    if (changed) renderForm(); else renderSum();
   }
   /* Нажатие на выделенное слово выключает его, повторное — включает обратно */
   function onTitleTap() {
@@ -2021,46 +2034,44 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       fTitle.value = '';
     }
     base = JSON.parse(JSON.stringify(form));
-    fOpen = null;
+    fCalOpen = false; fSubFocus = false;
     document.getElementById('f-head').textContent = t ? 'Изменить задачу' : 'Новая задача';
-    subInput.value = '';
+    fSave.textContent = t ? 'Сохранить' : 'Добавить';
     fIgnore = []; fSpans = []; fIgnSpans = [];
-    if (t) renderHl(); else onTitleInput();
     renderForm();
+    fBody.scrollTop = 0;
     scrim.hidden = false;
     renderHl();
     /* iOS открывает клавиатуру только если фокус ставится прямо во время нажатия, без задержки */
     fTitle.focus();
-    setTimeout(function () { if (document.activeElement !== fTitle && !fOpen) fTitle.focus(); }, 60);
+    setTimeout(function () { if (!document.activeElement || document.activeElement === document.body) fTitle.focus(); }, 60);
   }
-  function closeSheet() { scrim.hidden = true; fOpen = null; }
+  function closeSheet() { scrim.hidden = true; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 
   document.getElementById('add').addEventListener('click', function () { openSheet(null); });
   document.getElementById('close').addEventListener('click', closeSheet);
+  fSave.addEventListener('click', saveForm);
   scrim.addEventListener('click', function (e) { if (e.target === scrim) closeSheet(); });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !scrim.hidden) { if (fOpen) closePanel(); else closeSheet(); } });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !scrim.hidden) closeSheet(); });
   fTitle.addEventListener('input', onTitleInput);
   fTitle.addEventListener('click', onTitleTap);
-  fTitle.addEventListener('focus', function () { if (fOpen && fOpen !== 'subs') { fOpen = null; renderForm(); } });
-  subInput.addEventListener('focus', function () { if (fOpen !== 'subs') { fOpen = 'subs'; renderForm(); } });
-  function addFormSub() {
-    var v = subInput.value.trim(); if (!v) return;
-    form.subs.push({ t: v, done: false }); subInput.value = ''; renderForm(); subInput.focus();
-  }
-  document.getElementById('f-subadd').addEventListener('click', addFormSub);
-  subInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addFormSub(); } });
-  fTitle.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveForm(); } });
-  (function () {
-    var pnl = document.getElementById('f-panel'), y0 = null;
-    pnl.addEventListener('touchstart', function (e) { y0 = e.touches[0].clientY; }, { passive: true });
-    pnl.addEventListener('touchend', function (e) { if (y0 != null && e.changedTouches[0].clientY - y0 > 60) closePanel(); y0 = null; });
-  })();
+  /* «Готово»/Enter на клавиатуре прячет её и открывает параметры; Ctrl/Cmd+Enter сразу сохраняет */
+  fTitle.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) saveForm(); else fTitle.blur();
+  });
+  /* прокрутка параметров тоже убирает клавиатуру */
+  fBody.addEventListener('touchmove', function () {
+    var a = document.activeElement;
+    if (a === fTitle) fTitle.blur();
+  }, { passive: true });
 
   /* Сохранение не зависит от отправки формы: в некоторых встроенных браузерах она запрещена */
   document.getElementById('form').addEventListener('submit', function (e) { e.preventDefault(); saveForm(); });
   function saveForm() {
     var raw = fTitle.value.trim();
-    if (!raw) return;
+    if (!raw) { fTitle.focus(); return; }
     var pr = parseSmart(raw, fIgnore);
     var title = pr.title || raw;
     var date = form.date || (form.rep ? todayIso : '');
