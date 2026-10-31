@@ -457,7 +457,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .sheet .nf-row input[type="number"] { width: auto; min-height: 0; padding: 6px 12px; font-size: 14px; border-radius: 999px; }
 .sheet .nf-row input[type="number"] { width: 70px; }
 .nf-tpick { position: relative; overflow: hidden; cursor: pointer; }
-.sheet .nf-tpick input[type="time"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; margin: 0; cursor: pointer; }
+.sheet .nf-tpick input[type="date"], .sheet .nf-tpick input[type="time"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; margin: 0; cursor: pointer; }
 .nf-calh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; color: var(--fg); }
 .nf-calh button { border: 0; background: transparent; color: var(--accent); width: 36px; height: 30px; display: grid; place-items: center; padding: 0; }
 .nf-calh button:disabled { color: var(--muted); opacity: .4; }
@@ -468,6 +468,10 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .nf-cal button:disabled { opacity: .3; }
 .nf-cal button.td { box-shadow: inset 0 0 0 1px var(--accent); color: var(--accent); font-weight: 700; }
 .nf-cal button.sel { background: var(--accent); color: var(--accent-fg); font-weight: 700; }
+.task.virt .title { color: var(--muted); }
+.task.virt .check { opacity: .45; }
+.horizon { margin: 14px 4px 4px; font-size: 12.5px; color: var(--muted); text-align: center; display: grid; gap: 6px; justify-items: center; }
+.hz-link { border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: 13px; padding: 4px 8px; }
 .note { margin: 22px 0 8px; font-size: 12px; color: var(--muted); text-align: center; }
 
 .toast {
@@ -917,9 +921,12 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (text) s.appendChild(document.createTextNode(text));
     return s;
   }
+  /* Повтор в будущий день — «виртуальная» копия: вычисляется из правила, в базе её нет. Раскрывается только та копия, на которую нажали. */
+  var expandedDay = null;
   function taskRow(t, d, showDate, inbox) {
     var future = !!t.rep && d && d !== t.date;
-    var row = el('div', 'task' + (t.done ? ' done' : '') + (expanded === t.id ? ' open' : ''));
+    var isOpen = expanded === t.id && (future ? expandedDay === d : !expandedDay);
+    var row = el('div', 'task' + (t.done ? ' done' : '') + (future ? ' virt' : '') + (isOpen ? ' open' : ''));
     var main = el('div', 'task-main');
     var c = el('button', 'check p' + t.prio);
     c.type = 'button';
@@ -930,7 +937,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 
     var body = el('button', 'body');
     body.type = 'button';
-    body.setAttribute('aria-expanded', String(expanded === t.id));
+    body.setAttribute('aria-expanded', String(isOpen));
     body.appendChild(el('span', 'title', t.title));
     var meta = el('span', 'meta');
     var who = el('span', 'who ' + t.who);
@@ -947,20 +954,20 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     if (t.comments.length) meta.appendChild(metaItem('', IC.chat, String(t.comments.length)));
     if (t.thanks.length) meta.appendChild(metaItem('pr p3', IC.heart, String(t.thanks.length)));
     body.appendChild(meta);
-    body.addEventListener('click', function () { expanded = expanded === t.id ? null : t.id; moveOpen = null; renderAll(); });
+    body.addEventListener('click', function () { if (isOpen) expanded = null; else { expanded = t.id; expandedDay = future ? d : null; } moveOpen = null; renderAll(); });
     main.appendChild(c); main.appendChild(body);
     if (inbox) {
       var sb = el('button', 'sched'); sb.type = 'button'; sb.innerHTML = IC.cal;
       sb.setAttribute('aria-label', 'Назначить день'); sb.setAttribute('aria-expanded', String(expanded === t.id && moveOpen === t.id));
       sb.addEventListener('click', function () {
         if (expanded === t.id && moveOpen === t.id) { expanded = null; moveOpen = null; }
-        else { expanded = t.id; moveOpen = t.id; }
+        else { expanded = t.id; expandedDay = null; moveOpen = t.id; }
         renderAll();
       });
       main.appendChild(sb);
     }
     row.appendChild(main);
-    if (expanded === t.id) row.appendChild(detail(t));
+    if (isOpen) row.appendChild(detail(t));
     return row;
   }
 
@@ -1132,6 +1139,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
   }
 
   /* Вкладка «Задачи» */
+  var LIST_DAYS = 7;
   function renderList(main) {
     var all = tasks.filter(visible);
     var total = 0, doneN = 0;
@@ -1168,13 +1176,34 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     var late = open.filter(function (t) { return t.date && t.date < todayIso; }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : cmp(a, b); });
     if (late.length) main.appendChild(group('Просрочено', '', late, 'late', { showDate: true }));
 
-    var dates = {};
-    open.forEach(function (t) { if (t.date && t.date >= todayIso) (dates[t.date] = dates[t.date] || []).push(t); });
+    /* Только ближайшие 7 дней. Повторяющиеся задачи показываются в каждом дне, куда попадают:
+       копии вычисляются из правила повтора и в базу не записываются. */
+    var horizon = rel(LIST_DAYS - 1), dates = {}, later = 0;
+    function put(d, t) { (dates[d] = dates[d] || []).push(t); }
+    open.forEach(function (t) {
+      if (!t.date) return;
+      if (t.date > horizon) { later++; return; }
+      if (t.date >= todayIso) put(t.date, t);
+      if (t.rep) {
+        for (var i = 0; i < LIST_DAYS; i++) {
+          var d = rel(i);
+          if (d > t.date && occursOn(t, d)) put(d, t);
+        }
+      }
+    });
     Object.keys(dates).sort().forEach(function (d) {
       var label = d === todayIso ? 'Сегодня' : d === rel(1) ? 'Завтра' : fmtDay(d);
       var sub = (d === todayIso || d === rel(1)) ? fmtDay(d) : '';
-      main.appendChild(group(label, sub, dates[d].sort(cmp), d === todayIso ? 'now' : ''));
+      main.appendChild(group(label, sub, dates[d].sort(cmp), d === todayIso ? 'now' : '', { d: d }));
     });
+    var hn = el('div', 'horizon');
+    var hsd = shortDate(horizon);
+    hn.appendChild(el('span', null, 'Показаны задачи на ближайшие ' + LIST_DAYS + ' дней, до ' + hsd + (/\.$/.test(hsd) ? '' : '.') +
+      (later ? ' Ещё ' + later + ' ' + plural(later, 'задача', 'задачи', 'задач') + ' позже — смотрите в календаре.' : '')));
+    var hb = el('button', 'hz-link', 'Открыть календарь'); hb.type = 'button';
+    hb.addEventListener('click', function () { tab = 'cal'; expanded = null; renderAll(); window.scrollTo(0, 0); });
+    hn.appendChild(hb);
+    main.appendChild(hn);
     var done = all.filter(function (t) { return t.done; });
     if (done.length) main.appendChild(group('Выполнено', 'убираются через ' + DONE_TTL_DAYS + ' дней', done, '', { showDate: false }));
 
@@ -1823,6 +1852,13 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       }
     }
   }
+  /* то же, что pick, но без перерисовки формы — пока открыт системный выбор даты/времени */
+  function pickLive(k, v) {
+    releaseToken(k); setF(k, v);
+    var pr = parseSmart(fTitle.value, fIgnore);
+    fSpans = pr.spans; fIgnSpans = ignoredSpans(fTitle.value);
+    renderHl(); renderSum();
+  }
   function pick(k, v, also) {
     (also || []).concat([k]).forEach(releaseToken);
     setF(k, v);
@@ -1891,11 +1927,25 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     qd.forEach(function (q) { dr.appendChild(pill(q[0], form.date === q[1], function () { fCalOpen = false; pick('date', q[1]); })); });
     dr.appendChild(pill('Backlog', !form.date && !form.rep, function () { fCalOpen = false; setF('time', ''); setF('rep', null); pick('date', '', ['time', 'rep']); }));
     var odate = form.date && qd.every(function (q) { return q[1] !== form.date; });
-    var cb = pill(odate ? relLabel(form.date) : 'Календарь', odate || fCalOpen, function () { fCalOpen = !fCalOpen; syncCal(); renderForm(); }, IC.cal0);
-    cb.setAttribute('aria-expanded', String(fCalOpen));
+    /* Другая дата — системный календарь телефона: кнопка с прозрачным полем даты поверх.
+       Пока календарь открыт, форму не перерисовываем (иначе iOS его закрывает), обновляем только сводку. */
+    var cb = el('label', 'pill nf-tpick' + (odate ? ' on' : ''));
+    cb.innerHTML = IC.cal0;
+    var cl = el('span', null, odate ? relLabel(form.date) : 'Календарь'); cb.appendChild(cl);
+    var di = el('input'); di.type = 'date'; di.min = todayIso; di.value = form.date || ''; di.setAttribute('aria-label', 'Выбрать дату в календаре');
+    function liveDate() {
+      if (!di.value || di.value < todayIso) return;
+      pickLive('date', di.value); cl.textContent = relLabel(di.value);
+      var known = qd.some(function (q) { return q[1] === di.value; });
+      cb.classList.toggle('on', !known);
+    }
+    if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) di.addEventListener('click', function () { try { if (di.showPicker) di.showPicker(); } catch (e) {} });
+    di.addEventListener('input', liveDate);
+    di.addEventListener('change', liveDate);
+    di.addEventListener('blur', function () { renderForm(); });
+    cb.appendChild(di);
     dr.appendChild(cb);
     var ws = section('Когда', dr);
-    if (fCalOpen) ws.appendChild(calBox());
 
     /* 3. Время */
     var tr = el('div', 'nf-row');
@@ -1911,8 +1961,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     function liveTime() {
       if (!ti.value) return;
       if (!form.date) setF('date', todayIso);
-      setF('time', ti.value); tl.textContent = ti.value; tp.classList.add('on');
-      renderSum();
+      pickLive('time', ti.value); tl.textContent = ti.value; tp.classList.add('on');
     }
     if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) ti.addEventListener('click', function () { try { if (ti.showPicker) ti.showPicker(); } catch (e) {} });
     ti.addEventListener('input', liveTime);
@@ -1974,7 +2023,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     sg.addEventListener('click', addSub);
     si.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); addSub(); } });
     /* поле внизу: при вводе прокручиваем его наверх, чтобы клавиатура не закрыла */
-    si.addEventListener('focus', function () { setTimeout(function () { si.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 250); });
+    si.addEventListener('focus', function () { setTimeout(keepFocusedVisible, 350); });
     ar.appendChild(si); ar.appendChild(sg); sb.appendChild(ar);
     section('Подзадачи', sb);
 
@@ -2041,12 +2090,34 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     renderForm();
     fBody.scrollTop = 0;
     scrim.hidden = false;
+    fitScrim();
     renderHl();
     /* iOS открывает клавиатуру только если фокус ставится прямо во время нажатия, без задержки */
     fTitle.focus();
     setTimeout(function () { if (!document.activeElement || document.activeElement === document.body) fTitle.focus(); }, 60);
   }
-  function closeSheet() { scrim.hidden = true; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+  function closeSheet() { scrim.hidden = true; scrim.style.top = scrim.style.height = scrim.style.bottom = ''; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+  /* Форма занимает ровно видимую часть экрана над клавиатурой. iOS при открытии клавиатуры
+     прокручивает страницу; подгоняем форму под видимую область, чтобы поле ввода не уезжало. */
+  function fitScrim() {
+    var vv = window.visualViewport;
+    if (scrim.hidden || !vv) return;
+    scrim.style.top = vv.offsetTop + 'px';
+    scrim.style.height = vv.height + 'px';
+    scrim.style.bottom = 'auto';
+    keepFocusedVisible();
+  }
+  function keepFocusedVisible() {
+    var a = document.activeElement;
+    if (scrim.hidden || !a || !fBody.contains(a)) return;
+    var br = fBody.getBoundingClientRect(), ar = a.getBoundingClientRect();
+    if (ar.bottom > br.bottom - 12) fBody.scrollTop += ar.bottom - br.bottom + 24;
+    else if (ar.top < br.top + 8) fBody.scrollTop -= br.top - ar.top + 16;
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', fitScrim);
+    window.visualViewport.addEventListener('scroll', fitScrim);
+  }
 
   document.getElementById('add').addEventListener('click', function () { openSheet(null); });
   document.getElementById('close').addEventListener('click', closeSheet);
