@@ -1564,6 +1564,18 @@ input[type="text"], input[type="date"], input[type="time"], input[type="number"]
       inv.appendChild(row); sheet.appendChild(inv);
     }
 
+    if (tg && tg.isVersionAtLeast && tg.isVersionAtLeast('8.0') && typeof tg.addToHomeScreen === 'function') {
+      var hs = el('div', 'f');
+      hs.style.display = 'none';
+      var hb = el('button', 'btn sec', 'Добавить на главный экран'); hb.type = 'button';
+      hb.addEventListener('click', function () { try { tg.addToHomeScreen(); } catch (e) {} });
+      hs.appendChild(hb);
+      sheet.appendChild(hs);
+      try {
+        tg.checkHomeScreenStatus(function (st) { if (st === 'missed' || st === 'unknown') hs.style.display = ''; });
+      } catch (e) {}
+    }
+
     var mt = el('div', 'f');
     var lab = el('label', null, 'Утренняя сводка в Telegram'); lab.setAttribute('for', 's-morning');
     var inp = el('input'); inp.type = 'time'; inp.id = 's-morning'; inp.value = String(me.morning_time || '08:00').slice(0, 5);
