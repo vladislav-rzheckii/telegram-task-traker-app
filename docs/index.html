@@ -433,8 +433,10 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
 .nf-tabs button.on { background: var(--accent); color: var(--accent-fg); font-weight: 600; }
 .nf-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; color: var(--fg); }
 .nf-row .pill.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-.sheet .nf-row input[type="time"], .sheet .nf-row input[type="number"] { width: auto; min-height: 0; padding: 6px 12px; font-size: 14px; border-radius: 999px; }
+.sheet .nf-row input[type="number"] { width: auto; min-height: 0; padding: 6px 12px; font-size: 14px; border-radius: 999px; }
 .sheet .nf-row input[type="number"] { width: 70px; }
+.nf-tpick { position: relative; overflow: hidden; cursor: pointer; }
+.sheet .nf-tpick input[type="time"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; padding: 0; border: 0; margin: 0; cursor: pointer; }
 .nf-calh { display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 14px; color: var(--fg); }
 .nf-calh button { border: 0; background: transparent; color: var(--accent); width: 36px; height: 30px; display: grid; place-items: center; padding: 0; }
 .nf-calh button:disabled { color: var(--muted); opacity: .4; }
@@ -761,7 +763,8 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     pen: svg('<path d="M4 20h4L19 9a2.8 2.8 0 00-4-4L4 16z"/>'),
     trash: svg('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 002 2h6a2 2 0 002-2l1-12M9 7V4h6v3"/>'),
     chev: svg('<path d="M6 9l6 6 6-6"/>'),
-    plus: svg('<path d="M12 5v14M5 12h14"/>')
+    plus: svg('<path d="M12 5v14M5 12h14"/>'),
+    clock: svg('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>')
   };
 
   function el(tag, cls, text) {
@@ -1848,9 +1851,24 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
         [['Без времени', ''], ['09:00', '09:00'], ['13:00', '13:00'], ['18:00', '18:00'], ['21:00', '21:00']].forEach(function (q) {
           r.appendChild(pill(q[0], form.time === q[1], function () { if (q[1] && !form.date) setF('date', todayIso); pick('time', q[1]); }));
         });
+        /* Своё время: кнопка-«пилюля» с прозрачным системным полем поверх. Пока колесо времени открыто,
+           форму не перерисовываем, иначе iOS закрывает выбор. */
+        var custom = form.time && ['09:00', '13:00', '18:00', '21:00'].indexOf(form.time) < 0;
+        var tp = el('label', 'pill nf-tpick' + (custom ? ' on' : ''));
+        tp.innerHTML = IC.clock;
+        var tl = el('span', null, custom ? form.time : 'Другое'); tp.appendChild(tl);
         var ti = el('input'); ti.type = 'time'; ti.value = form.time || ''; ti.setAttribute('aria-label', 'Другое время');
-        ti.addEventListener('change', function () { if (ti.value && !form.date) setF('date', todayIso); pick('time', ti.value); });
-        r.appendChild(ti); p.appendChild(r);
+        function liveTime() {
+          if (!ti.value) return;
+          if (!form.date) setF('date', todayIso);
+          setF('time', ti.value); tl.textContent = ti.value; tp.classList.add('on');
+          renderSum();
+        }
+        if (!/iPad|iPhone|iPod/.test(navigator.userAgent)) ti.addEventListener('click', function () { try { if (ti.showPicker) ti.showPicker(); } catch (e) {} });
+        ti.addEventListener('input', liveTime);
+        ti.addEventListener('change', liveTime);
+        ti.addEventListener('blur', function () { renderForm(); });
+        tp.appendChild(ti); r.appendChild(tp); p.appendChild(r);
       } else {
         [['Нет', ''], ['День', 'day'], ['Неделя', 'week'], ['Месяц', 'month']].forEach(function (q) {
           r.appendChild(pill(q[0], (form.rep ? form.rep.unit : '') === q[1], function () {
@@ -1891,7 +1909,7 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
       p.appendChild(pl);
     }
   }
-  function renderForm() {
+  function renderSum() {
     var ctx = document.getElementById('f-ctx'), ct = formCtx();
     ctx.hidden = !ct; ctx.textContent = ct;
     var sum = [NAMES[form.who], whenText()];
@@ -1899,6 +1917,9 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     var L = form.list ? listById(form.list) : null;
     if (L) sum.push(L.name);
     document.getElementById('f-sum').textContent = sum.join(' · ');
+  }
+  function renderForm() {
+    renderSum();
 
     var sw = document.getElementById('f-subwrap');
     sw.hidden = !(form.subs.length || fOpen === 'subs');
@@ -2001,7 +2022,9 @@ input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-
     renderForm();
     scrim.hidden = false;
     renderHl();
-    setTimeout(function () { fTitle.focus(); }, 30);
+    /* iOS открывает клавиатуру только если фокус ставится прямо во время нажатия, без задержки */
+    fTitle.focus();
+    setTimeout(function () { if (document.activeElement !== fTitle && !fOpen) fTitle.focus(); }, 60);
   }
   function closeSheet() { scrim.hidden = true; fOpen = null; }
 
